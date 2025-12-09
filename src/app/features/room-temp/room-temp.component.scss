@@ -1,0 +1,830 @@
+:host {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.room-page {
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #111929 0%, #536786 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #ffffff;
+  overflow: auto;
+  position: fixed;
+  margin: 0;
+  padding: 0;
+
+  // Back Button
+  .back-btn {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    z-index: 100;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: scale(1.05);
+    }
+  }
+
+  // Page Header
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px 80px 0;
+    margin-bottom: 40px;
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+
+      svg {
+        width: 48px;
+        height: 48px;
+        color: #64c8ff;
+        filter: drop-shadow(0 0 15px rgba(100, 200, 255, 0.5));
+      }
+
+      .title-text {
+        h1 {
+          font-size: 36px;
+          font-weight: 300;
+          margin: 0;
+          letter-spacing: 1px;
+          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+          font-size: 16px;
+          opacity: 0.8;
+          font-weight: 300;
+          margin-top: 5px;
+        }
+      }
+    }
+
+    .room-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+
+      .room-name {
+        font-size: 18px;
+        font-weight: 500;
+        opacity: 0.9;
+        padding: 8px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+      }
+
+      .room-status {
+        padding: 8px 20px;
+        border-radius: 30px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+
+        &.optimal {
+          background: rgba(46, 204, 113, 0.15);
+          border: 1px solid rgba(46, 204, 113, 0.3);
+          
+          .status-dot {
+            background: #2ecc71;
+            animation: pulse 2s infinite;
+          }
+        }
+
+        &.good {
+          background: rgba(255, 193, 7, 0.15);
+          border: 1px solid rgba(255, 193, 7, 0.3);
+          
+          .status-dot {
+            background: #ffc107;
+          }
+        }
+
+        &.poor {
+          background: rgba(255, 71, 87, 0.15);
+          border: 1px solid rgba(255, 71, 87, 0.3);
+          
+          .status-dot {
+            background: #ff4757;
+            animation: pulse 1.5s infinite;
+          }
+        }
+
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+        }
+      }
+    }
+  }
+
+  // Dashboard
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    padding: 0 80px;
+    margin-bottom: 50px;
+
+    .sensor-card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 25px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-5px);
+      }
+
+      // Temperature Card
+      &.temperature {
+        border-top: 4px solid #64c8ff;
+        
+        .sensor-icon {
+          background: rgba(100, 200, 255, 0.2);
+        }
+
+        .range-fill {
+          background: linear-gradient(90deg, #64c8ff, #1e90ff);
+        }
+      }
+
+      // Humidity Card
+      &.humidity {
+        border-top: 4px solid #2ecc71;
+        
+        .sensor-icon {
+          background: rgba(46, 204, 113, 0.2);
+        }
+
+        .range-fill {
+          background: linear-gradient(90deg, #2ecc71, #27ae60);
+        }
+      }
+
+      // Air Quality Card
+      &.air-quality {
+        border-top: 4px solid #ffc107;
+        
+        .sensor-icon {
+          background: rgba(255, 193, 7, 0.2);
+        }
+      }
+
+      .sensor-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 25px;
+
+        .sensor-icon {
+          font-size: 32px;
+          width: 60px;
+          height: 60px;
+          border-radius: 15px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .sensor-title {
+          h3 {
+            font-size: 20px;
+            font-weight: 500;
+            margin: 0 0 5px 0;
+            opacity: 0.9;
+          }
+
+          .sensor-unit {
+            font-size: 14px;
+            opacity: 0.7;
+          }
+        }
+      }
+
+      .sensor-value {
+        margin-bottom: 25px;
+
+        .current-value {
+          font-size: 64px;
+          font-weight: 300;
+          line-height: 1;
+          margin-bottom: 10px;
+          
+          .temperature & {
+            background: linear-gradient(45deg, #64c8ff, #1e90ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+          
+          .humidity & {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+          
+          .air-quality & {
+            background: linear-gradient(45deg, #ffc107, #ff9800);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+        }
+
+        .value-trend {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          opacity: 0.8;
+        }
+      }
+
+      .sensor-range {
+        margin-bottom: 25px;
+
+        .range-bar {
+          position: relative;
+          height: 8px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          margin-bottom: 10px;
+          overflow: visible;
+
+          .range-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+          }
+
+          .range-indicator {
+            position: absolute;
+            top: -4px;
+            width: 16px;
+            height: 16px;
+            background: #ffffff;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            transition: left 1s ease;
+          }
+        }
+
+        .range-labels {
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+          opacity: 0.7;
+
+          .comfort-range {
+            color: #2ecc71;
+            font-weight: 500;
+          }
+        }
+      }
+
+      .sensor-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+
+        .stat {
+          text-align: center;
+          padding: 15px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+
+          .stat-label {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+          }
+
+          .stat-value {
+            font-size: 18px;
+            font-weight: 500;
+          }
+        }
+      }
+
+      .humidity-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+
+        .detail-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 15px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+
+          .detail-icon {
+            font-size: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .detail-content {
+            .detail-label {
+              font-size: 12px;
+              opacity: 0.7;
+              margin-bottom: 4px;
+            }
+
+            .detail-value {
+              font-size: 18px;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+
+      .aqi-breakdown {
+        margin-bottom: 25px;
+
+        .aqi-parameter {
+          margin-bottom: 15px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .parameter-name {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+          }
+
+          .parameter-value {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+          }
+
+          .parameter-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+
+            .bar-fill {
+              height: 100%;
+              transition: width 1s ease;
+
+              .good & { background: #2ecc71; }
+              .moderate & { background: #ffc107; }
+              .poor & { background: #ff4757; }
+            }
+          }
+        }
+      }
+
+      .aqi-level {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 25px;
+
+        &.good {
+          background: rgba(46, 204, 113, 0.15);
+          border: 1px solid rgba(46, 204, 113, 0.3);
+          color: #2ecc71;
+        }
+
+        &.moderate {
+          background: rgba(255, 193, 7, 0.15);
+          border: 1px solid rgba(255, 193, 7, 0.3);
+          color: #ffc107;
+        }
+
+        &.poor {
+          background: rgba(255, 71, 87, 0.15);
+          border: 1px solid rgba(255, 71, 87, 0.3);
+          color: #ff4757;
+          animation: pulse 2s infinite;
+        }
+      }
+
+      .air-advice {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+
+        .advice-icon {
+          font-size: 24px;
+          width: 50px;
+          height: 50px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .advice-text {
+          font-size: 14px;
+          opacity: 0.9;
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+
+  // Comfort Section
+  .comfort-section {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 40px 80px;
+    margin-bottom: 40px;
+
+    h2 {
+      font-size: 24px;
+      font-weight: 300;
+      margin: 0 0 30px 0;
+      opacity: 0.9;
+    }
+
+    .comfort-grid {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+
+      .comfort-meter {
+        text-align: center;
+
+        .meter-circle {
+          position: relative;
+          width: 150px;
+          height: 150px;
+          border-radius: 50%;
+          margin: 0 auto 15px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          &::before {
+            content: '';
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 50%;
+          }
+
+          .meter-value {
+            position: relative;
+            font-size: 36px;
+            font-weight: 300;
+            z-index: 1;
+          }
+
+          .meter-label {
+            position: relative;
+            font-size: 16px;
+            opacity: 0.7;
+            z-index: 1;
+            margin-top: 5px;
+          }
+        }
+
+        .comfort-level {
+          font-size: 16px;
+          font-weight: 500;
+          margin-top: 10px;
+        }
+      }
+
+      .comfort-factors {
+        .factor {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 15px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .factor-name {
+            font-size: 14px;
+            opacity: 0.8;
+            min-width: 100px;
+          }
+
+          .factor-bar {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+
+            .bar-fill {
+              height: 100%;
+              transition: width 1s ease;
+
+              &.excellent { background: #2ecc71; }
+              &.good { background: #ffc107; }
+              &.poor { background: #ff4757; }
+            }
+          }
+
+          .factor-value {
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 40px;
+            text-align: right;
+          }
+        }
+      }
+
+      .comfort-tips {
+        h3 {
+          font-size: 18px;
+          font-weight: 500;
+          margin: 0 0 15px 0;
+          opacity: 0.9;
+        }
+
+        ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+
+          li {
+            position: relative;
+            padding-left: 25px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.5;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            &::before {
+              content: '•';
+              position: absolute;
+              left: 0;
+              color: #64c8ff;
+              font-size: 20px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // History Section
+  .history-section {
+    padding: 0 80px 40px;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+
+      h2 {
+        font-size: 24px;
+        font-weight: 300;
+        margin: 0;
+        opacity: 0.9;
+      }
+
+      .chart-legend {
+        display: flex;
+        gap: 20px;
+
+        .legend-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          opacity: 0.8;
+
+          .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+
+            &.temp {
+              background: #64c8ff;
+            }
+
+            &.humidity {
+              background: #2ecc71;
+            }
+          }
+        }
+      }
+    }
+
+    .history-chart {
+      position: relative;
+      height: 300px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+
+      .chart-grid {
+        position: absolute;
+        top: 30px;
+        left: 30px;
+        right: 30px;
+        bottom: 60px;
+
+        .grid-line {
+          position: absolute;
+          left: 0;
+          right: 0;
+          height: 1px;
+          background: rgba(255, 255, 255, 0.1);
+        }
+      }
+
+      .chart-data {
+        position: absolute;
+        top: 30px;
+        left: 30px;
+        right: 30px;
+        bottom: 60px;
+
+        .temp-line, .humidity-line {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+        }
+
+        .data-point {
+          position: absolute;
+          width: 8px;
+          height: 8px;
+          background: #64c8ff;
+          border-radius: 50%;
+          transform: translate(-50%, 50%);
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          &:hover {
+            transform: translate(-50%, 50%) scale(1.5);
+            box-shadow: 0 0 10px rgba(100, 200, 255, 0.8);
+
+            .point-value {
+              opacity: 1;
+            }
+          }
+
+          .point-value {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+          }
+        }
+      }
+
+      .chart-axis {
+        position: absolute;
+        bottom: 20px;
+        left: 30px;
+        right: 30px;
+        height: 40px;
+
+        .axis-label {
+          position: absolute;
+          transform: translateX(-50%);
+          font-size: 12px;
+          opacity: 0.7;
+        }
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Responsive
+@media (max-width: 1200px) {
+  .room-page {
+    .page-header,
+    .dashboard,
+    .comfort-section,
+    .history-section {
+      padding: 0 40px;
+    }
+
+    .dashboard {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    .comfort-grid {
+      grid-template-columns: 1fr !important;
+      gap: 30px !important;
+      
+      .comfort-meter {
+        order: 1;
+      }
+      
+      .comfort-factors {
+        order: 2;
+      }
+      
+      .comfort-tips {
+        order: 3;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .room-page {
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+      padding-top: 80px;
+    }
+
+    .dashboard,
+    .comfort-section,
+    .history-section {
+      padding: 0 20px;
+    }
+
+    .history-chart {
+      height: 250px !important;
+      padding: 20px !important;
+    }
+
+    .section-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 15px;
+    }
+  }
+}

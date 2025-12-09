@@ -1,0 +1,307 @@
+<div class="gas-page">
+  <!-- Back Button -->
+  <button class="back-btn" routerLink="/">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+  </button>
+
+  <!-- Emergency Alert -->
+  <div class="emergency-alert" *ngIf="emergencyActive" @emergencyAnimation>
+    <div class="alert-content">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-text">
+        <h3>GAS LEAK DETECTED!</h3>
+        <p>Immediate action required. Evacuate area and contact emergency services.</p>
+      </div>
+      <button class="alert-dismiss" (click)="dismissEmergency()">DISMISS</button>
+    </div>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="title-section">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+      <div class="title-text">
+        <h1>Gas Detection System</h1>
+        <p class="subtitle">Real-time monitoring of hazardous gases & safety alerts</p>
+      </div>
+    </div>
+    
+    <div class="system-status" [class]="getSystemStatus()">
+      <div class="status-dot"></div>
+      <span>{{ getSystemStatusText() }}</span>
+    </div>
+  </div>
+
+  <!-- Main Dashboard -->
+  <div class="dashboard">
+    <!-- CO2 Detection -->
+    <div class="gas-card" [class]="getGasCardClass('co2')">
+      <div class="gas-header">
+        <div class="gas-icon">💨</div>
+        <div class="gas-info">
+          <h3>Carbon Dioxide</h3>
+          <div class="gas-formula">CO₂</div>
+        </div>
+      </div>
+      
+      <div class="gas-reading">
+        <div class="reading-value">{{ co2Level }}</div>
+        <div class="reading-unit">ppm</div>
+      </div>
+
+      <div class="gas-meter">
+        <div class="meter-bar">
+          <div class="meter-fill" [style.width]="getCo2Percentage() + '%'"></div>
+          <div class="meter-indicator" [style.left]="getCo2Percentage() + '%'"></div>
+        </div>
+        <div class="meter-labels">
+          <span>Safe</span>
+          <span>Warning</span>
+          <span>Danger</span>
+        </div>
+      </div>
+
+      <div class="gas-status">
+        <div class="status-badge" [class]="getGasStatus('co2')">
+          {{ getGasStatusText('co2') }}
+        </div>
+        <div class="last-updated">Updated {{ lastUpdate | date:'HH:mm:ss' }}</div>
+      </div>
+    </div>
+
+    <!-- Methane Detection -->
+    <div class="gas-card" [class]="getGasCardClass('methane')">
+      <div class="gas-header">
+        <div class="gas-icon">🔥</div>
+        <div class="gas-info">
+          <h3>Methane</h3>
+          <div class="gas-formula">CH₄</div>
+        </div>
+      </div>
+      
+      <div class="gas-reading">
+        <div class="reading-value">{{ methaneLevel }}</div>
+        <div class="reading-unit">LEL%</div>
+      </div>
+
+      <div class="gas-meter">
+        <div class="meter-bar">
+          <div class="meter-fill" [style.width]="getMethanePercentage() + '%'"></div>
+          <div class="meter-indicator" [style.left]="getMethanePercentage() + '%'"></div>
+        </div>
+        <div class="meter-labels">
+          <span>0%</span>
+          <span>10%</span>
+          <span>20%</span>
+        </div>
+      </div>
+
+      <div class="gas-status">
+        <div class="status-badge" [class]="getGasStatus('methane')">
+          {{ getGasStatusText('methane') }}
+        </div>
+        <div class="last-updated">Updated {{ lastUpdate | date:'HH:mm:ss' }}</div>
+      </div>
+    </div>
+
+    <!-- Smoke Detection -->
+    <div class="gas-card" [class]="getGasCardClass('smoke')">
+      <div class="gas-header">
+        <div class="gas-icon">🌫️</div>
+        <div class="gas-info">
+          <h3>Smoke Particles</h3>
+          <div class="gas-formula">PM2.5</div>
+        </div>
+      </div>
+      
+      <div class="gas-reading">
+        <div class="reading-value">{{ smokeLevel }}</div>
+        <div class="reading-unit">µg/m³</div>
+      </div>
+
+      <div class="gas-meter">
+        <div class="meter-bar">
+          <div class="meter-fill" [style.width]="getSmokePercentage() + '%'"></div>
+          <div class="meter-indicator" [style.left]="getSmokePercentage() + '%'"></div>
+        </div>
+        <div class="meter-labels">
+          <span>Clean</span>
+          <span>Moderate</span>
+          <span>Hazardous</span>
+        </div>
+      </div>
+
+      <div class="gas-status">
+        <div class="status-badge" [class]="getGasStatus('smoke')">
+          {{ getGasStatusText('smoke') }}
+        </div>
+        <div class="last-updated">Updated {{ lastUpdate | date:'HH:mm:ss' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Safety Panel -->
+  <div class="safety-panel">
+    <div class="panel-header">
+      <h2>🛡️ Safety Controls</h2>
+      <div class="alarm-status" [class.active]="alarmActive">
+        <div class="alarm-dot"></div>
+        <span>{{ alarmActive ? 'ALARM ACTIVE' : 'ALARM READY' }}</span>
+      </div>
+    </div>
+
+    <div class="controls-grid">
+      <div class="control-card">
+        <div class="control-icon">🚪</div>
+        <div class="control-content">
+          <h4>Ventilation</h4>
+          <p>Automated window control based on gas levels</p>
+          <div class="control-status">
+            <span class="status-text">{{ ventilationStatus }}</span>
+            <button class="control-btn" (click)="toggleVentilation()">
+              {{ ventilationActive ? 'CLOSE' : 'OPEN' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <div class="control-icon">🔊</div>
+        <div class="control-content">
+          <h4>Audible Alarm</h4>
+          <p>Emergency siren for immediate alert</p>
+          <div class="control-status">
+            <span class="status-text">{{ alarmActive ? 'ACTIVE' : 'READY' }}</span>
+            <button class="control-btn" [class.danger]="alarmActive" (click)="toggleAlarm()">
+              {{ alarmActive ? 'STOP ALARM' : 'TEST ALARM' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <div class="control-icon">📱</div>
+        <div class="control-content">
+          <h4>Emergency Notify</h4>
+          <p>Send alerts to emergency contacts</p>
+          <div class="control-status">
+            <span class="status-text">READY</span>
+            <button class="control-btn danger" (click)="sendEmergencyAlert()">
+              SEND ALERT
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <div class="control-icon">🔄</div>
+        <div class="control-content">
+          <h4>System Reset</h4>
+          <p>Reset all sensors and clear alerts</p>
+          <div class="control-status">
+            <span class="status-text">STANDBY</span>
+            <button class="control-btn" (click)="resetSystem()">
+              RESET SYSTEM
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gas History -->
+  <div class="history-section">
+    <div class="section-header">
+      <h2>📊 Gas Level History</h2>
+      <div class="time-selector">
+        <button class="time-btn" [class.active]="selectedPeriod === '1h'" (click)="selectPeriod('1h')">1H</button>
+        <button class="time-btn" [class.active]="selectedPeriod === '6h'" (click)="selectPeriod('6h')">6H</button>
+        <button class="time-btn" [class.active]="selectedPeriod === '24h'" (click)="selectPeriod('24h')">24H</button>
+        <button class="time-btn" [class.active]="selectedPeriod === '7d'" (click)="selectPeriod('7d')">7D</button>
+      </div>
+    </div>
+
+    <div class="history-chart">
+      <div class="chart-container">
+        <div class="chart-grid">
+          <div class="grid-line" *ngFor="let line of gridLines" [style.bottom]="line.position + '%'">
+            <span class="grid-label">{{ line.value }}</span>
+          </div>
+        </div>
+        
+        <div class="chart-lines">
+          <!-- CO2 Line -->
+          <svg class="gas-line co2">
+            <polyline [attr.points]="getCo2LinePoints()" fill="none" stroke="#ffc107" stroke-width="3"/>
+          </svg>
+          
+          <!-- Methane Line -->
+          <svg class="gas-line methane">
+            <polyline [attr.points]="getMethaneLinePoints()" fill="none" stroke="#ff4757" stroke-width="3"/>
+          </svg>
+          
+          <!-- Smoke Line -->
+          <svg class="gas-line smoke">
+            <polyline [attr.points]="getSmokeLinePoints()" fill="none" stroke="#6c5ce7" stroke-width="3" stroke-dasharray="5,5"/>
+          </svg>
+        </div>
+        
+        <div class="chart-legend">
+          <div class="legend-item">
+            <div class="legend-color co2"></div>
+            <span>CO₂</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color methane"></div>
+            <span>CH₄</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color smoke"></div>
+            <span>PM2.5</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="chart-axis">
+        <div class="axis-label" *ngFor="let label of timeLabels" [style.left]="label.position + '%'">
+          {{ label.time }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Safety Instructions -->
+  <div class="instructions-section">
+    <h2>📋 Safety Instructions</h2>
+    <div class="instructions-grid">
+      <div class="instruction-card warning">
+        <div class="instruction-icon">⚠️</div>
+        <h4>Gas Detected</h4>
+        <p>If alarm sounds, evacuate immediately. Do not use electrical switches.</p>
+      </div>
+      
+      <div class="instruction-card emergency">
+        <div class="instruction-icon">🚨</div>
+        <h4>Emergency Numbers</h4>
+        <p>Fire Department: 911<br>Gas Emergency: 1-800-111-2222</p>
+      </div>
+      
+      <div class="instruction-card prevention">
+        <div class="instruction-icon">🔧</div>
+        <h4>Prevention Tips</h4>
+        <p>Regularly check gas connections. Install carbon monoxide detectors.</p>
+      </div>
+      
+      <div class="instruction-card evacuation">
+        <div class="instruction-icon">🚪</div>
+        <h4>Evacuation Plan</h4>
+        <p>Know your exits. Meet at designated safe point outside building.</p>
+      </div>
+    </div>
+  </div>
+</div>

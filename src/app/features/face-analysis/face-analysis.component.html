@@ -1,0 +1,183 @@
+<div class="face-page">
+  <!-- Back Button -->
+  <button class="back-btn" routerLink="/">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </svg>
+  </button>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="title-section">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+        <path d="M12 16v6"/>
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+        <line x1="9" y1="9" x2="9.01" y2="9"/>
+        <line x1="15" y1="9" x2="15.01" y2="9"/>
+      </svg>
+      <div class="title-text">
+        <h1>AI Skin Analysis</h1>
+        <p class="subtitle">Deep learning facial recognition & skincare recommendations</p>
+      </div>
+    </div>
+    
+    <div class="analysis-status" [class]="analysisStatus">
+      <div class="status-dot"></div>
+      <span>{{ getStatusText() }}</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content-container">
+    <!-- Left: Camera & Face Display -->
+    <div class="face-display-section">
+      <div class="camera-preview" (click)="captureFace()">
+        <div class="camera-frame" [class.active]="isScanning">
+          <div class="face-overlay" *ngIf="faceDetected">
+            <div class="face-outline"></div>
+            <div class="landmark-point" 
+                 *ngFor="let point of faceLandmarks"
+                 [style.left]="point.x + '%'"
+                 [style.top]="point.y + '%'"></div>
+          </div>
+          
+          <div class="scan-line" *ngIf="isScanning"></div>
+          
+          <div class="camera-placeholder" *ngIf="!faceDetected">
+            <div class="camera-icon">📷</div>
+            <p>Click to capture face image</p>
+          </div>
+          
+          <img *ngIf="capturedImage" [src]="capturedImage" class="captured-image">
+        </div>
+      </div>
+
+      <div class="camera-controls">
+        <button class="control-btn primary" (click)="startScan()" [disabled]="isScanning">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          {{ isScanning ? 'Scanning...' : 'Start Scan' }}
+        </button>
+        
+        <button class="control-btn" (click)="captureFace()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Capture Image
+        </button>
+        
+        <button class="control-btn" (click)="resetScan()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Analysis Results -->
+    <div class="analysis-results">
+      <!-- Basic Info -->
+      <div class="basic-info">
+        <div class="info-item">
+          <div class="info-label">Gender</div>
+          <div class="info-value">{{ gender }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Age</div>
+          <div class="info-value">{{ estimatedAge }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Skin Tone</div>
+          <div class="info-value">{{ skinTone }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Confidence</div>
+          <div class="info-value">{{ confidence }}%</div>
+        </div>
+      </div>
+
+      <!-- Skin Condition Analysis -->
+      <div class="skin-analysis">
+        <h3>🧬 Skin Conditions Detected</h3>
+        <div class="conditions-grid">
+          <div class="condition-item" *ngFor="let condition of skinConditions" 
+               [class]="condition.severity">
+            <div class="condition-name">{{ condition.name }}</div>
+            <div class="condition-severity">
+              <div class="severity-bar">
+                <div class="severity-fill" [style.width]="condition.level + '%'"></div>
+              </div>
+              <span class="severity-text">{{ getSeverityText(condition.level) }}</span>
+            </div>
+            <div class="condition-level">{{ condition.level }}%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health Score -->
+      <div class="health-score">
+        <div class="score-circle">
+          <div class="score-value">{{ skinHealthScore }}</div>
+          <div class="score-label">Skin Health</div>
+        </div>
+        <div class="score-details">
+          <div class="score-item">
+            <span class="score-label">Hydration</span>
+            <span class="score-value">{{ hydrationScore }}/100</span>
+          </div>
+          <div class="score-item">
+            <span class="score-label">Evenness</span>
+            <span class="score-value">{{ evennessScore }}/100</span>
+          </div>
+          <div class="score-item">
+            <span class="score-label">Texture</span>
+            <span class="score-value">{{ textureScore }}/100</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="recommendations-section">
+    <h2>✨ Personalized Recommendations</h2>
+    <div class="recommendations-grid">
+      <div class="recommendation-card" *ngFor="let rec of recommendations">
+        <div class="rec-icon">{{ rec.icon }}</div>
+        <div class="rec-content">
+          <h4>{{ rec.title }}</h4>
+          <p>{{ rec.description }}</p>
+          <div class="rec-priority" [class]="rec.priority">
+            {{ rec.priority === 'high' ? 'High Priority' : 
+               rec.priority === 'medium' ? 'Medium Priority' : 'Low Priority' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Routine -->
+  <div class="routine-section">
+    <h2>📅 Suggested Daily Routine</h2>
+    <div class="routine-timeline">
+      <div class="routine-step" *ngFor="let step of dailyRoutine">
+        <div class="step-time">{{ step.time }}</div>
+        <div class="step-content">
+          <div class="step-icon">{{ step.icon }}</div>
+          <div class="step-text">
+            <h4>{{ step.title }}</h4>
+            <p>{{ step.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
