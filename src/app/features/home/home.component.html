@@ -38,16 +38,16 @@
 
     <!-- Left Side Buttons -->
     <div class="left-buttons">
-      <!-- ✅ Heart Rate - GOOD -->
-      <button class="icon-btn" routerLink="/heart" title="Heart Rate & Blood Pressure">
+      <!-- Heart Rate -->
+      <button class="icon-btn" (click)="openHeartRate()" title="Heart Rate & Blood Pressure">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
         </svg>
         <span class="label">Heart Rate</span>
       </button>
 
-      <!-- ⚠️ Body Temp - ADD routerLink -->
-      <button class="icon-btn" routerLink="/body-temp" title="Body Temperature">
+      <!-- Body Temperature (Human/Skin Temp - MLX90614) -->
+      <button class="icon-btn" (click)="openBodyTemp()" title="Body Temperature">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
         </svg>
@@ -57,8 +57,8 @@
 
     <!-- Right Side Buttons -->
     <div class="right-buttons">
-      <!-- ⚠️ Room Temp - ADD routerLink -->
-      <button class="icon-btn" routerLink="/room-temp" title="Room Temperature">
+      <!-- Room Temperature & Humidity (DHT22) -->
+      <button class="icon-btn" (click)="openRoomTemp()" title="Room Temperature & Humidity">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
           <polyline points="9 22 9 12 15 12 15 22"/>
@@ -66,8 +66,8 @@
         <span class="label">Room Temp</span>
       </button>
 
-      <!-- ⚠️ Gas Detect - FIX path (lowercase "gas") -->
-      <button class="icon-btn" routerLink="/gas" title="Gas Detection">
+      <!-- Gas Detection (MQ135) -->
+      <button class="icon-btn" (click)="openGasDetection()" title="Air Quality & Gas Detection">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2L2 7l10 5 10-5-10-5z"/>
           <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
@@ -78,8 +78,8 @@
 
     <!-- Bottom Center Button -->
     <div class="bottom-center">
-      <!-- ✅ Face - GOOD -->
-      <button class="icon-btn large" routerLink="/face" title="AI Skincare Analysis">
+      <!-- Skincare AI (uses mlx90614 + dht22) -->
+      <button class="icon-btn large" (click)="openSkincare()" title="AI Skincare Analysis">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
           <path d="M12 16v6"/>

@@ -47,7 +47,7 @@
 
       .alert-text {
         flex: 1;
-        
+
         h3 {
           font-size: 20px;
           font-weight: 700;
@@ -159,7 +159,7 @@
       &.safe {
         background: rgba(46, 204, 113, 0.15);
         border: 2px solid rgba(46, 204, 113, 0.3);
-        
+
         .status-dot {
           background: #2ecc71;
           animation: pulse 2s infinite;
@@ -169,7 +169,7 @@
       &.warning {
         background: rgba(255, 193, 7, 0.15);
         border: 2px solid rgba(255, 193, 7, 0.3);
-        
+
         .status-dot {
           background: #ffc107;
           animation: warningPulse 1.5s infinite;
@@ -179,7 +179,7 @@
       &.emergency {
         background: rgba(255, 71, 87, 0.15);
         border: 2px solid rgba(255, 71, 87, 0.3);
-        
+
         .status-dot {
           background: #ff4757;
           animation: emergencyPulse 1s infinite;
@@ -212,7 +212,7 @@
 
       &.safe {
         border-color: rgba(46, 204, 113, 0.3);
-        
+
         &:hover {
           border-color: rgba(46, 204, 113, 0.6);
           box-shadow: 0 10px 30px rgba(46, 204, 113, 0.2);
@@ -222,7 +222,7 @@
       &.warning {
         border-color: rgba(255, 193, 7, 0.3);
         animation: warningGlow 2s infinite;
-        
+
         &:hover {
           border-color: rgba(255, 193, 7, 0.6);
           box-shadow: 0 10px 30px rgba(255, 193, 7, 0.3);
@@ -232,7 +232,7 @@
       &.danger {
         border-color: rgba(255, 71, 87, 0.3);
         animation: dangerGlow 1s infinite;
-        
+
         &:hover {
           border-color: rgba(255, 71, 87, 0.6);
           box-shadow: 0 10px 30px rgba(255, 71, 87, 0.4);
@@ -258,7 +258,7 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          
+
           .safe & { background: rgba(46, 204, 113, 0.2); }
           .warning & { background: rgba(255, 193, 7, 0.2); }
           .danger & { background: rgba(255, 71, 87, 0.2); }
@@ -287,19 +287,19 @@
           font-size: 64px;
           font-weight: 300;
           line-height: 1;
-          
+
           .safe & {
             background: linear-gradient(45deg, #2ecc71, #27ae60);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
           }
-          
+
           .warning & {
             background: linear-gradient(45deg, #ffc107, #ff9800);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
           }
-          
+
           .danger & {
             background: linear-gradient(45deg, #ff4757, #ff3838);
             -webkit-background-clip: text;
@@ -332,7 +332,7 @@
             height: 100%;
             border-radius: 5px;
             transition: width 1s ease;
-            
+
             .safe & { background: linear-gradient(90deg, #2ecc71, #27ae60); }
             .warning & { background: linear-gradient(90deg, #ffc107, #ff9800); }
             .danger & { background: linear-gradient(90deg, #ff4757, #ff3838); }
@@ -348,7 +348,7 @@
             transform: translateX(-50%);
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
             transition: left 1s ease;
-            
+
             .safe & { box-shadow: 0 0 15px rgba(46, 204, 113, 0.8); }
             .warning & { box-shadow: 0 0 15px rgba(255, 193, 7, 0.8); }
             .danger & { box-shadow: 0 0 15px rgba(255, 71, 87, 0.8); }
@@ -374,19 +374,19 @@
           font-size: 14px;
           font-weight: 600;
           letter-spacing: 1px;
-          
+
           &.safe {
             background: rgba(46, 204, 113, 0.15);
             border: 1px solid rgba(46, 204, 113, 0.3);
             color: #2ecc71;
           }
-          
+
           &.warning {
             background: rgba(255, 193, 7, 0.15);
             border: 1px solid rgba(255, 193, 7, 0.3);
             color: #ffc107;
           }
-          
+
           &.danger {
             background: rgba(255, 71, 87, 0.15);
             border: 1px solid rgba(255, 71, 87, 0.3);
@@ -438,7 +438,7 @@
         &:not(.active) {
           background: rgba(46, 204, 113, 0.15);
           border: 2px solid rgba(46, 204, 113, 0.3);
-          
+
           .alarm-dot {
             background: #2ecc71;
           }
@@ -448,7 +448,7 @@
           background: rgba(255, 71, 87, 0.15);
           border: 2px solid rgba(255, 71, 87, 0.3);
           animation: warningFlash 1s infinite;
-          
+
           .alarm-dot {
             background: #ff4757;
             animation: emergencyPulse 1s infinite;
@@ -539,7 +539,7 @@
               &.danger {
                 background: rgba(255, 71, 87, 0.2);
                 border-color: rgba(255, 71, 87, 0.3);
-                
+
                 &:hover {
                   background: rgba(255, 71, 87, 0.3);
                   border-color: rgba(255, 71, 87, 0.5);
@@ -625,7 +625,7 @@
             left: 0;
             right: 0;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
-            
+
             .grid-label {
               position: absolute;
               left: -40px;
@@ -716,7 +716,7 @@
 
         &.warning {
           border-color: rgba(255, 193, 7, 0.3);
-          
+
           .instruction-icon {
             background: rgba(255, 193, 7, 0.2);
           }
@@ -724,7 +724,7 @@
 
         &.emergency {
           border-color: rgba(255, 71, 87, 0.3);
-          
+
           .instruction-icon {
             background: rgba(255, 71, 87, 0.2);
           }
@@ -732,7 +732,7 @@
 
         &.prevention {
           border-color: rgba(46, 204, 113, 0.3);
-          
+
           .instruction-icon {
             background: rgba(46, 204, 113, 0.2);
           }
@@ -740,7 +740,7 @@
 
         &.evacuation {
           border-color: rgba(100, 200, 255, 0.3);
-          
+
           .instruction-icon {
             background: rgba(100, 200, 255, 0.2);
           }
@@ -880,7 +880,7 @@
   .gas-page {
     .emergency-alert {
       padding: 20px !important;
-      
+
       .alert-content {
         flex-direction: column;
         text-align: center;
@@ -915,4 +915,47 @@
       padding: 20px !important;
     }
   }
+}
+
+.gas-card {
+  &.excellent { border-left: 6px solid #2ecc71; }
+  &.good { border-left: 6px solid #3498db; }
+  &.moderate { border-left: 6px solid #f39c12; }
+  &.poor { border-left: 6px solid #e67e22; }
+  &.danger { border-left: 6px solid #e74c3c; background: rgba(231, 76, 60, 0.05); }
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9em;
+
+  &.excellent { background: #2ecc71; color: white; }
+  &.good { background: #3498db; color: white; }
+  &.moderate { background: #f39c12; color: white; }
+  &.poor { background: #e67e22; color: white; }
+  &.danger { background: #e74c3c; color: white; }
+}
+
+.advice-card {
+  padding: 20px;
+  border-radius: 12px;
+  background: #f8f9fa;
+  &.warning { background: #fff3cd; border: 1px solid #ffeaa7; }
+  &.danger { background: #f8d7da; border: 1px solid #f5c6cb; }
+}
+
+.system-status {
+  &.online .status-dot { background: #2ecc71; }
+  &.connecting .status-dot { background: #f39c12; animation: pulse 1.5s infinite; }
+  &.offline .status-dot { background: #e74c3c; }
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
 }

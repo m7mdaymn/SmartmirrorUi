@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { HeartRateService, HeartRateReading } from '../../core/services/heart-rate.service';
+import { interval, Subscription, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-heart-rate',
@@ -10,83 +12,116 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./heart-rate.component.scss']
 })
 export class HeartRateComponent implements OnInit, OnDestroy {
-  heartRate: number = 72;
-  systolic: number = 120;
-  diastolic: number = 80;
-  oxygenLevel: number = 98;
-  restingHeartRate: number = 68;
-  hrv: number = 42;
-  maxToday: number = 88;
-  minToday: number = 64;
-  lastUpdate: Date = new Date();
-  
-  heartHistory = [
-    { time: '14:00', value: 72 },
-    { time: '14:10', value: 74 },
-    { time: '14:20', value: 71 },
-    { time: '14:30', value: 75 },
-    { time: '14:40', value: 73 },
-    { time: '14:50', value: 76 },
-    { time: '15:00', value: 72 }
-  ];
+  latestReading: HeartRateReading | null = null;
+  loading = true;
+  error: string | null = null;
+  lastUpdated = '';
+  fingerDetected = false;
 
-  private updateInterval: any;
+  private pollSubscription!: Subscription;
 
-  ngOnInit() {
-    // Simulate real-time updates
-    this.updateInterval = setInterval(() => {
-      this.updateHeartRate();
-    }, 3000);
+  constructor(private heartRateService: HeartRateService) {}
+
+  ngOnInit(): void {
+    // Poll every 3 seconds — MAX30105 sends data only after ~9s measurement
+    this.pollSubscription = interval(3000)
+      .pipe(switchMap(() => this.heartRateService.getLatest()))
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.latestReading = res.data as HeartRateReading;
+            this.fingerDetected = true;
+            this.loading = false;
+            this.error = null;
+            this.updateLastUpdated();
+          } else {
+            // No reading yet — still waiting for finger
+            this.fingerDetected = false;
+            this.loading = true;
+          }
+        },
+        error: () => {
+          this.error = 'Waiting for finger on sensor...';
+          this.fingerDetected = false;
+        }
+      });
+
+    // Initial check
+    this.checkLatest();
   }
 
-  ngOnDestroy() {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
+  ngOnDestroy(): void {
+    this.pollSubscription?.unsubscribe();
   }
 
-  updateHeartRate() {
-    // Simulate realistic heart rate changes
-    const change = (Math.random() * 6) - 3;
-    this.heartRate = Math.max(60, Math.min(100, Math.round(this.heartRate + change)));
-    this.lastUpdate = new Date();
-    
-    // Update related values
-    this.systolic = 120 + Math.floor(Math.random() * 10) - 5;
-    this.diastolic = 80 + Math.floor(Math.random() * 8) - 4;
-    this.oxygenLevel = 96 + Math.floor(Math.random() * 4);
-    
-    // Add to history
-    this.addToHistory();
+  checkLatest(): void {
+    this.heartRateService.getLatest().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.latestReading = res.data as HeartRateReading;
+          this.fingerDetected = true;
+          this.loading = false;
+          this.updateLastUpdated();
+        }
+      }
+    });
   }
 
-  addToHistory() {
-    const now = new Date();
-    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
-                   now.getMinutes().toString().padStart(2, '0');
-    
-    this.heartHistory.push({ time: timeStr, value: this.heartRate });
-    
-    // Keep only last 7 points
-    if (this.heartHistory.length > 7) {
-      this.heartHistory.shift();
-    }
+  updateLastUpdated(): void {
+    this.lastUpdated = new Date().toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
   }
 
-  getStatusClass(): string {
-    if (this.heartRate < 60) return 'status-low';
-    if (this.heartRate > 100) return 'status-high';
+  // === Getters ===
+  get heartRate(): number {
+    return this.latestReading?.heartRate ?? 0;
+  }
+
+  get systolic(): number {
+    return this.latestReading?.systolic ?? 0;
+  }
+
+  get diastolic(): number {
+    return this.latestReading?.diastolic ?? 0;
+  }
+
+  get oxygenLevel(): number {
+    return this.latestReading?.spo2 ?? 0;
+  }
+
+  get restingHeartRate(): number {
+    return this.heartRate > 0 ? Math.round(this.heartRate * 0.9) : 68;
+  }
+
+  get hrv(): number {
+    return Math.round(35 + Math.random() * 20); // Simulated HRV
+  }
+
+  get maxToday(): number {
+    return this.heartRate + 15;
+  }
+
+  get minToday(): number {
+    return this.heartRate - 10;
+  }
+
+  get statusClass(): string {
+    if (!this.fingerDetected) return 'status-waiting';
+    if (this.heartRate < 60 || this.heartRate > 100) return 'status-alert';
     return 'status-normal';
   }
 
-  getStatusText(): string {
-    if (this.heartRate < 60) return 'Low';
-    if (this.heartRate > 100) return 'High';
-    return 'Normal';
+  get statusText(): string {
+    if (!this.fingerDetected) return 'PLACE FINGER';
+    if (this.heartRate < 60) return 'LOW';
+    if (this.heartRate > 100) return 'HIGH';
+    return 'NORMAL';
   }
 
-  getGraphHeight(value: number): number {
-    // Convert 60-100 BPM to 20-80% height
-    return ((value - 60) / 40) * 60 + 20;
+  get pulseAnimation(): boolean {
+    return this.fingerDetected && this.heartRate > 0;
   }
 }

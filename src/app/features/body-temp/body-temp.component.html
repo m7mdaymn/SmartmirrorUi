@@ -6,7 +6,18 @@
     </svg>
   </button>
 
-  <!-- Page Header -->
+  <!-- Emergency Fever Alert -->
+  <div class="emergency-alert" *ngIf="isFever">
+    <div class="alert-content">
+      <div class="alert-icon">🚨</div>
+      <div class="alert-text">
+        <h3>FEVER DETECTED!</h3>
+        <p>Temperature: {{ bodyTemp }}°{{ unit }} — Rest and monitor health.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
   <div class="page-header">
     <div class="title-section">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -14,132 +25,107 @@
       </svg>
       <div class="title-text">
         <h1>Body Temperature</h1>
-        <p class="subtitle">Core temperature monitoring & fever detection</p>
+        <p class="subtitle">Non-contact forehead reading via MLX90614</p>
       </div>
     </div>
-    
-    <div class="temp-scale">
-      <button class="scale-btn active">°C</button>
-      <button class="scale-btn">°F</button>
+
+    <div class="system-status" [class]="connectionStatus">
+      <div class="status-dot"></div>
+      <span>{{ connectionStatusText }}</span>
+      <small *ngIf="lastUpdated">Last: {{ lastUpdated }}</small>
     </div>
   </div>
 
-  <!-- Main Temperature Display -->
-  <div class="temp-display-container">
+  <!-- Loading / Error -->
+  <div class="loading-overlay" *ngIf="loading">
+    <p>Aiming sensor at forehead...</p>
+    <p>Hold 3-5 cm away for accurate reading</p>
+  </div>
+
+  <div class="error-message" *ngIf="error">
+    <p>⚠️ {{ error }}</p>
+    <p>Tap "Body Temp" on home screen to enable MLX90614 sensor.</p>
+  </div>
+
+  <!-- Main Display -->
+  <div class="temp-display-container" *ngIf="latestReading && !loading && !error">
+    <!-- Thermometer -->
     <div class="thermometer">
       <div class="thermometer-body">
         <div class="thermometer-bulb">
-          <div class="mercury" [style.height]="getMercuryHeight() + '%'"></div>
+          <div class="mercury" [style.height.%]="mercuryHeight"></div>
         </div>
         <div class="thermometer-scale">
-          <div class="scale-mark" *ngFor="let mark of temperatureScale" 
-               [style.bottom]="mark.position + '%'">
-            <span class="scale-value">{{ mark.value }}°</span>
+          <div class="scale-mark" *ngFor="let mark of [35, 36, 37, 38, 39]"
+               [style.bottom.%]="((mark - 35)/4)*100">
+            <span class="scale-value">{{ mark }}°</span>
             <div class="scale-line"></div>
           </div>
+          <div class="danger-zone" *ngIf="isFever"></div>
         </div>
       </div>
+
       <div class="current-temp">
         <div class="temp-value">{{ bodyTemp }}</div>
-        <div class="temp-unit">°C</div>
+        <div class="temp-unit">°{{ unit }}</div>
+        <div class="temp-status" [class]="tempStatusClass">
+          {{ tempIcon }} {{ tempStatus }}
+        </div>
       </div>
     </div>
 
+    <!-- Info Panel -->
     <div class="temp-info">
-      <div class="info-card">
-        <div class="info-icon">🌡️</div>
+      <div class="info-card main">
         <div class="info-content">
-          <h3>Current Reading</h3>
-          <div class="info-value">{{ bodyTemp }}°C</div>
-          <div class="info-status" [class]="getTempStatusClass()">
-            {{ getTempStatus() }}
+          <h3>Current Body Temperature</h3>
+          <div class="info-value large">{{ bodyTemp }}°{{ unit }}</div>
+          <div class="info-status" [class]="tempStatusClass">
+            {{ tempStatus }}
           </div>
         </div>
       </div>
 
       <div class="info-grid">
         <div class="info-item">
-          <div class="item-label">Last Measurement</div>
-          <div class="item-value">{{ lastMeasurement | date:'HH:mm' }}</div>
+          <div class="item-label">Ambient Temp</div>
+          <div class="item-value">{{ ambientTemp }}°{{ unit }}</div>
         </div>
         <div class="info-item">
-          <div class="item-label">Today's High</div>
-          <div class="item-value">{{ todayHigh }}°C</div>
+          <div class="item-label">Last Reading</div>
+          <div class="item-value">{{ lastUpdated }}</div>
         </div>
         <div class="info-item">
-          <div class="item-label">Today's Low</div>
-          <div class="item-value">{{ todayLow }}°C</div>
+          <div class="item-label">Status</div>
+          <div class="item-value">{{ tempStatus }}</div>
         </div>
         <div class="info-item">
-          <div class="item-label">Accuracy</div>
-          <div class="item-value">{{ accuracy }}%</div>
+          <div class="item-label">Sensor</div>
+          <div class="item-value">MLX90614</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Temperature History -->
-  <div class="history-section">
-    <div class="section-header">
-      <h2>📊 Temperature History</h2>
-      <div class="time-selector">
-        <button class="time-btn active">Today</button>
-        <button class="time-btn">Week</button>
-        <button class="time-btn">Month</button>
-      </div>
-    </div>
-
-    <div class="history-chart">
-      <div class="chart-container">
-        <div *ngFor="let reading of tempHistory" class="chart-column">
-          <div class="column-bar" [style.height]="getChartHeight(reading.temp) + '%'"
-               [class]="getBarClass(reading.temp)">
-            <div class="bar-value">{{ reading.temp }}°</div>
-          </div>
-          <div class="column-label">{{ reading.time }}</div>
-        </div>
-      </div>
-      <div class="chart-legend">
-        <div class="legend-item">
-          <div class="legend-color normal"></div>
-          <span>Normal (36-37°C)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color elevated"></div>
-          <span>Elevated (37-38°C)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color fever"></div>
-          <span>Fever (>38°C)</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Health Insights -->
-  <div class="insights-section">
-    <h2>💡 Health Insights</h2>
-    <div class="insights-grid">
-      <div class="insight-card">
-        <div class="insight-icon">🤒</div>
-        <h3>Fever Alert</h3>
-        <p *ngIf="bodyTemp >= 38">You have a fever. Consider resting and monitoring.</p>
-        <p *ngIf="bodyTemp >= 37 && bodyTemp < 38">Slight elevation. Stay hydrated.</p>
-        <p *ngIf="bodyTemp < 37">Normal body temperature. Keep it up!</p>
-      </div>
-
-      <div class="insight-card">
-        <div class="insight-icon">⏰</div>
-        <h3>Daily Pattern</h3>
-        <p>Your temperature typically peaks around {{ peakTime }}.</p>
-      </div>
-
-      <div class="insight-card">
-        <div class="insight-icon">📈</div>
-        <h3>Trend Analysis</h3>
-        <p *ngIf="trend > 0.5">Temperature rising significantly.</p>
-        <p *ngIf="trend <= 0.5 && trend >= -0.5">Stable temperature pattern.</p>
-        <p *ngIf="trend < -0.5">Temperature decreasing.</p>
+  <!-- Health Advice -->
+  <div class="insights-section" *ngIf="latestReading">
+    <h2>Health Guidance</h2>
+    <div class="advice-card" [class.fever]="isFever" [class.elevated]="isElevated">
+      <div class="advice-icon">{{ tempIcon }}</div>
+      <div class="advice-text">
+        <p *ngIf="tempStatus === 'NORMAL'">
+          <strong>Healthy temperature!</strong> Your body is in normal range.
+        </p>
+        <p *ngIf="tempStatus === 'ELEVATED'">
+          <strong>Slightly elevated.</strong> Rest, hydrate, and monitor over next hours.
+        </p>
+        <p *ngIf="tempStatus === 'FEVER'">
+          <strong>Fever detected.</strong> Rest, stay hydrated. Consider medical advice if >38.5°C or symptoms persist.
+        </p>
+        <p *ngIf="tempStatus === 'LOW'">
+          Temperature is low. Ensure you're warm and check again.
+        </p>
+        <small>Tips: Measure from forehead, 3–5 cm distance, in stable room temperature.</small>
       </div>
     </div>
   </div>

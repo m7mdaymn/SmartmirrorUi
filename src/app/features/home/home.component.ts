@@ -1,12 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router'; 
-
+import { RouterModule, Router } from '@angular/router';
+import { SensorControlService } from '../../core/services/sensor-control.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule], // Add RouterModule here
+  imports: [CommonModule, RouterModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -17,17 +17,18 @@ export class HomeComponent implements OnInit, OnDestroy {
   showMainUI: boolean = false;
   private timeInterval: any;
 
+  constructor(
+    private sensorControl: SensorControlService,
+    private router: Router
+  ) {}
+
   ngOnInit() {
     this.updateTime();
-    this.timeInterval = setInterval(() => {
-      this.updateTime();
-    }, 1000);
+    this.timeInterval = setInterval(() => this.updateTime(), 1000);
   }
 
   ngOnDestroy() {
-    if (this.timeInterval) {
-      clearInterval(this.timeInterval);
-    }
+    if (this.timeInterval) clearInterval(this.timeInterval);
   }
 
   updateTime() {
@@ -53,25 +54,41 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.showMainUI = false;
   }
 
-  // Keep these functions if you want to do something before navigating
+  // Helper to enable sensor(s) and navigate
+  private enableAndNavigate(sensorNames: string | string[], route: string) {
+    const sensors = Array.isArray(sensorNames) ? sensorNames : [sensorNames];
+
+    // Fire and forget – we don't block navigation on this
+    sensors.forEach(sensor => {
+      this.sensorControl.toggleSensor(sensor as any, true).subscribe({
+        next: (res) => console.log(`✅ ${sensor} enabled`, res.message),
+        error: (err) => console.warn(`⚠️ Failed to enable ${sensor}`, err.message)
+      });
+    });
+
+    // Navigate immediately (smooth UX)
+    this.router.navigate([route]);
+  }
+
+  // Button actions with sensor enabling
   openHeartRate() {
-    console.log('Opening Heart Rate & Blood Pressure Monitor');
-    // You can add logic here before navigation
+    this.enableAndNavigate('max30105', '/heart');
   }
 
-  openTemperature() {
-    console.log('Opening Body Temperature Monitor');
+  openBodyTemp() {
+    this.enableAndNavigate('mlx90614', '/body-temp');
   }
 
-  openRoomEnvironment() {
-    console.log('Opening Room Temperature Monitor');
+  openRoomTemp() {
+    this.enableAndNavigate('dht22', '/room-temp');
   }
 
   openGasDetection() {
-    console.log('Opening Gas Detection System');
+    this.enableAndNavigate('mq135', '/gas');
   }
 
   openSkincare() {
-    console.log('Opening AI Skincare Analysis');
+    // Skincare needs both skin temp (mlx90614) and humidity (dht22)
+    this.enableAndNavigate(['mlx90614', 'dht22'], '/face');
   }
 }

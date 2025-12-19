@@ -9,6 +9,7 @@
   padding: 0;
   overflow: hidden;
 }
+
 .temp-page {
   width: 100vw;
   height: 100vh;
@@ -20,7 +21,7 @@
   margin: 0;
   padding: 0;
 
-  // Back Button
+  /* Back Button */
   .back-btn {
     position: absolute;
     top: 30px;
@@ -46,7 +47,40 @@
     }
   }
 
-  // Page Header
+  /* Emergency Alert */
+  .emergency-alert {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    padding: 20px;
+    border-radius: 16px;
+    text-align: center;
+    margin: 20px 80px;
+    animation: pulse 2s infinite;
+
+    .alert-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+
+      .alert-icon {
+        font-size: 48px;
+      }
+
+      .alert-text {
+        h3 {
+          margin: 0;
+          font-size: 24px;
+        }
+        p {
+          margin: 5px 0 0;
+          opacity: 0.9;
+        }
+      }
+    }
+  }
+
+  /* Page Header */
   .page-header {
     display: flex;
     justify-content: space-between;
@@ -84,38 +118,66 @@
       }
     }
 
-    .temp-scale {
+    .system-status {
       display: flex;
+      align-items: center;
       gap: 10px;
       background: rgba(255, 255, 255, 0.1);
+      padding: 10px 20px;
       border-radius: 30px;
-      padding: 4px;
+      backdrop-filter: blur(10px);
 
-      .scale-btn {
-        padding: 8px 20px;
-        border: none;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.7);
-        border-radius: 30px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: 500;
-        transition: all 0.3s ease;
+      .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
 
-        &.active {
-          background: rgba(255, 165, 0, 0.3);
-          color: #ffffff;
-          box-shadow: 0 0 15px rgba(255, 165, 0, 0.3);
+        .connecting & {
+          background: #f39c12;
+          animation: pulse 1.5s infinite;
         }
 
-        &:hover:not(.active) {
-          background: rgba(255, 255, 255, 0.1);
+        .online & {
+          background: #2ecc71;
         }
+
+        .offline & {
+          background: #e74c3c;
+        }
+
+        .measuring & {
+          background: #ffa500;
+          animation: pulse 1.5s infinite;
+        }
+      }
+
+      small {
+        font-size: 12px;
+        opacity: 0.7;
+        margin-top: 4px;
       }
     }
   }
 
-  // Temperature Display
+  /* Loading & Error States */
+  .loading-overlay,
+  .error-message {
+    text-align: center;
+    padding: 60px 20px;
+    font-size: 18px;
+    opacity: 0.9;
+
+    p {
+      margin: 10px 0;
+    }
+  }
+
+  .error-message {
+    color: #ff6b6b;
+  }
+
+  /* Main Temperature Display */
   .temp-display-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -123,7 +185,7 @@
     padding: 0 80px;
     margin-bottom: 50px;
 
-    // Thermometer
+    /* Thermometer */
     .thermometer {
       position: relative;
       display: flex;
@@ -159,43 +221,83 @@
             width: 30px;
             background: linear-gradient(to top, #ff8c00, #ff5500);
             border-radius: 15px 15px 0 0;
-            transition: height 1s ease;
+            transition: height 1.2s ease;
             box-shadow: 0 0 20px rgba(255, 140, 0, 0.5);
           }
         }
 
         .thermometer-scale {
           position: absolute;
-          right: -40px;
+          right: -50px;
           top: 0;
           bottom: 120px;
-          width: 40px;
+          width: 50px;
 
           .scale-mark {
             position: absolute;
             display: flex;
             align-items: center;
             gap: 8px;
+            width: 100%;
 
             .scale-value {
-              font-size: 12px;
-              opacity: 0.7;
-              min-width: 25px;
+              font-size: 13px;
+              opacity: 0.8;
+              min-width: 30px;
               text-align: right;
+              font-weight: 500;
             }
 
             .scale-line {
-              width: 10px;
-              height: 1px;
-              background: rgba(255, 255, 255, 0.3);
+              width: 15px;
+              height: 2px;
+              background: rgba(255, 255, 255, 0.4);
             }
           }
+        }
+
+        /* Measuring Text & Loader Inside Thermometer */
+        .measuring-text {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+          color: white;
+          font-size: 14px;
+          z-index: 10;
+          width: 200px;
+
+          p {
+            margin: 15px 0 8px;
+            font-weight: bold;
+            font-size: 16px;
+          }
+
+          small {
+            opacity: 0.8;
+            font-size: 13px;
+          }
+        }
+
+        .pulse-loader {
+          width: 50px;
+          height: 50px;
+          border: 5px solid rgba(255, 255, 255, 0.3);
+          border-top: 5px solid #ffa500;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 20px;
         }
       }
 
       .current-temp {
         text-align: center;
-        
+        min-height: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
         .temp-value {
           font-size: 72px;
           font-weight: 300;
@@ -211,81 +313,77 @@
         .temp-unit {
           font-size: 24px;
           opacity: 0.8;
+          margin-bottom: 15px;
+        }
+
+        .temp-status {
+          display: inline-block;
+          padding: 10px 24px;
+          border-radius: 30px;
+          font-weight: bold;
+          font-size: 18px;
+
+          &.status-normal {
+            background: rgba(46, 204, 113, 0.2);
+            border: 2px solid #2ecc71;
+            color: #2ecc71;
+          }
+
+          &.status-elevated {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+            color: #ffc107;
+            animation: pulse 2s infinite;
+          }
+
+          &.status-fever {
+            background: rgba(255, 71, 87, 0.2);
+            border: 2px solid #ff4757;
+            color: #ff4757;
+            animation: warningFlash 1.5s infinite;
+          }
+        }
+
+        .measuring-hint {
+          font-size: 20px;
+          opacity: 0.9;
+          margin-top: 15px;
+          color: #ffa500;
         }
       }
     }
 
-    // Temperature Info
+    /* Temperature Info Panel */
     .temp-info {
-      .info-card {
+      .info-card.main {
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 20px;
         padding: 30px;
         backdrop-filter: blur(10px);
         margin-bottom: 30px;
-        display: flex;
-        align-items: center;
-        gap: 25px;
-        transition: all 0.3s ease;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.12);
-          border-color: rgba(255, 255, 255, 0.25);
-          transform: translateY(-2px);
-        }
-
-        .info-icon {
-          font-size: 40px;
-          width: 80px;
-          height: 80px;
-          background: rgba(255, 165, 0, 0.15);
-          border-radius: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
+        text-align: center;
 
         .info-content {
           h3 {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 400;
             opacity: 0.9;
-            margin: 0 0 10px 0;
+            margin-bottom: 20px;
           }
 
-          .info-value {
-            font-size: 36px;
+          .info-value.large {
+            font-size: 48px;
             font-weight: 300;
-            margin-bottom: 10px;
+            margin: 20px 0;
           }
 
           .info-status {
             display: inline-block;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
-
-            &.status-normal {
-              background: rgba(46, 204, 113, 0.15);
-              border: 1px solid rgba(46, 204, 113, 0.3);
-              color: #2ecc71;
-            }
-
-            &.status-elevated {
-              background: rgba(255, 193, 7, 0.15);
-              border: 1px solid rgba(255, 193, 7, 0.3);
-              color: #ffc107;
-              animation: pulse 2s infinite;
-            }
-
-            &.status-fever {
-              background: rgba(255, 71, 87, 0.15);
-              border: 1px solid rgba(255, 71, 87, 0.3);
-              color: #ff4757;
-              animation: warningFlash 1.5s infinite;
-            }
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 18px;
           }
         }
       }
@@ -301,6 +399,7 @@
           border-radius: 15px;
           padding: 20px;
           transition: all 0.3s ease;
+          text-align: center;
 
           &:hover {
             background: rgba(255, 255, 255, 0.08);
@@ -314,7 +413,7 @@
           }
 
           .item-value {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 300;
           }
         }
@@ -322,157 +421,7 @@
     }
   }
 
-  // History Section
-  .history-section {
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 40px 80px;
-    margin-bottom: 40px;
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-
-      h2 {
-        font-size: 24px;
-        font-weight: 300;
-        margin: 0;
-        opacity: 0.9;
-      }
-
-      .time-selector {
-        display: flex;
-        gap: 10px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 30px;
-        padding: 4px;
-
-        .time-btn {
-          padding: 8px 20px;
-          border: none;
-          background: transparent;
-          color: rgba(255, 255, 255, 0.7);
-          border-radius: 30px;
-          cursor: pointer;
-          font-size: 14px;
-          transition: all 0.3s ease;
-
-          &.active {
-            background: rgba(255, 165, 0, 0.3);
-            color: #ffffff;
-          }
-
-          &:hover:not(.active) {
-            background: rgba(255, 255, 255, 0.1);
-          }
-        }
-      }
-    }
-
-    .history-chart {
-      .chart-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        height: 200px;
-        margin-bottom: 30px;
-        padding: 0 20px;
-
-        .chart-column {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          height: 100%;
-          margin: 0 10px;
-
-          .column-bar {
-            width: 40px;
-            border-radius: 10px 10px 0 0;
-            transition: all 0.5s ease;
-            position: relative;
-            min-height: 10px;
-
-            &.normal {
-              background: linear-gradient(to top, rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.4));
-            }
-
-            &.elevated {
-              background: linear-gradient(to top, rgba(255, 193, 7, 0.8), rgba(230, 162, 40, 0.4));
-            }
-
-            &.fever {
-              background: linear-gradient(to top, rgba(255, 71, 87, 0.8), rgba(235, 47, 68, 0.4));
-            }
-
-            .bar-value {
-              position: absolute;
-              top: -25px;
-              left: 50%;
-              transform: translateX(-50%);
-              font-size: 12px;
-              opacity: 0;
-              transition: opacity 0.3s ease;
-              white-space: nowrap;
-            }
-
-            &:hover {
-              transform: scale(1.05);
-
-              .bar-value {
-                opacity: 1;
-              }
-            }
-          }
-
-          .column-label {
-            margin-top: 10px;
-            font-size: 12px;
-            opacity: 0.7;
-            text-align: center;
-          }
-        }
-      }
-
-      .chart-legend {
-        display: flex;
-        justify-content: center;
-        gap: 30px;
-        margin-top: 20px;
-
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          opacity: 0.8;
-
-          .legend-color {
-            width: 15px;
-            height: 15px;
-            border-radius: 3px;
-
-            &.normal {
-              background: #2ecc71;
-            }
-
-            &.elevated {
-              background: #ffc107;
-            }
-
-            &.fever {
-              background: #ff4757;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // Insights Section
+  /* Health Advice Section */
   .insights-section {
     padding: 0 80px 40px;
 
@@ -481,98 +430,83 @@
       font-weight: 300;
       margin-bottom: 30px;
       opacity: 0.9;
+      text-align: center;
     }
 
-    .insights-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 25px;
+    .advice-card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
 
-      .insight-card {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 20px;
-        padding: 25px;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
+      &.elevated {
+        background: rgba(255, 193, 7, 0.1);
+        border-color: rgba(255, 193, 7, 0.4);
+      }
 
-        &:hover {
-          background: rgba(255, 255, 255, 0.12);
-          border-color: rgba(255, 255, 255, 0.25);
-          transform: translateY(-5px);
-        }
+      &.fever {
+        background: rgba(255, 71, 87, 0.1);
+        border-color: rgba(255, 71, 87, 0.4);
+        animation: warningFlash 2s infinite;
+      }
 
-        .insight-icon {
-          font-size: 32px;
-          margin-bottom: 15px;
-        }
+      .advice-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+      }
 
-        h3 {
-          font-size: 18px;
-          font-weight: 500;
-          margin: 0 0 10px 0;
-          opacity: 0.9;
-        }
+      .advice-text {
+        font-size: 18px;
+        line-height: 1.6;
+        opacity: 0.9;
 
         p {
+          margin: 15px 0;
+        }
+
+        small {
+          display: block;
+          margin-top: 20px;
           font-size: 14px;
-          line-height: 1.5;
-          opacity: 0.8;
-          margin: 0;
+          opacity: 0.7;
         }
       }
     }
   }
 }
 
-// Animations
+/* Animations */
 @keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 @keyframes warningFlash {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
-@keyframes tempRise {
-  0% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.3);
-  }
-  100% {
-    filter: brightness(1);
-  }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-// Responsive
+/* Responsive Design */
 @media (max-width: 1200px) {
   .temp-page {
     .page-header,
     .temp-display-container,
-    .history-section,
     .insights-section {
       padding: 0 40px;
     }
 
     .temp-display-container {
       grid-template-columns: 1fr;
-      gap: 50px;
-    }
-
-    .insights-grid {
-      grid-template-columns: repeat(2, 1fr);
+      gap: 60px;
     }
   }
 }
@@ -583,27 +517,40 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 20px;
-      padding-top: 80px;
+      padding: 80px 20px 0;
     }
 
     .temp-display-container,
-    .history-section,
     .insights-section {
       padding: 0 20px;
     }
 
-    .thermometer .current-temp .temp-value {
-      font-size: 56px;
+    .thermometer {
+      .current-temp {
+        .temp-value {
+          font-size: 56px;
+        }
+      }
     }
 
-    .insights-grid {
+    .emergency-alert {
+      margin: 20px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .temp-page {
+    .thermometer {
+      .current-temp {
+        .temp-value {
+          font-size: 48px;
+        }
+      }
+    }
+
+    .info-grid {
       grid-template-columns: 1fr;
-    }
-
-    .history-chart .chart-legend {
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
     }
   }
 }

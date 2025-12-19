@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { HumanTempService, HumanTempReading } from '../../core/services/human-temp.service';
+import { interval, Subscription, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-body-temp',
@@ -10,107 +12,134 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./body-temp.component.scss']
 })
 export class BodyTempComponent implements OnInit, OnDestroy {
-  bodyTemp: number = 36.6;
-  lastMeasurement: Date = new Date();
-  todayHigh: number = 37.2;
-  todayLow: number = 36.2;
-  accuracy: number = 98;
-  peakTime: string = '16:30';
-  trend: number = 0.2;
+  latestReading: HumanTempReading | null = null;
+  loading = true;
+  error: string | null = null;
+  lastUpdated: string = '';
 
-  temperatureScale = [
-    { value: 35, position: 0 },
-    { value: 36, position: 25 },
-    { value: 37, position: 50 },
-    { value: 38, position: 75 },
-    { value: 39, position: 100 }
-  ];
+  private pollSubscription!: Subscription;
 
-  tempHistory = [
-    { time: '06:00', temp: 36.2 },
-    { time: '09:00', temp: 36.4 },
-    { time: '12:00', temp: 36.7 },
-    { time: '15:00', temp: 37.0 },
-    { time: '18:00', temp: 37.1 },
-    { time: '21:00', temp: 36.8 },
-    { time: '00:00', temp: 36.5 }
-  ];
+  constructor(private humanTempService: HumanTempService) {}
 
-  private updateInterval: any;
+  ngOnInit(): void {
+    // Poll every 8 seconds
+    this.pollSubscription = interval(8000)
+      .pipe(switchMap(() => this.humanTempService.getLatest()))
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.latestReading = res.data as HumanTempReading;
+            this.updateLastUpdated();
+            this.loading = false;
+            this.error = null;
+          } else {
+            this.error = 'No temperature data yet';
+            this.loading = false;
+          }
+        },
+        error: () => {
+          this.error = 'Sensor not enabled';
+          this.loading = false;
+        }
+      });
 
-  ngOnInit() {
-    this.updateInterval = setInterval(() => {
-      this.updateTemperature();
-    }, 5000);
+    this.loadLatest(); // Initial fetch
   }
 
-  ngOnDestroy() {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
+  ngOnDestroy(): void {
+    this.pollSubscription?.unsubscribe();
   }
 
-  updateTemperature() {
-    // Simulate realistic temperature changes
-    const change = (Math.random() * 0.4) - 0.2; // -0.2 to +0.2
-    this.bodyTemp = Math.max(35.5, Math.min(39.0, this.bodyTemp + change));
-    this.bodyTemp = Math.round(this.bodyTemp * 10) / 10; // Keep 1 decimal
-    
-    this.lastMeasurement = new Date();
-    
-    // Update today's high/low
-    if (this.bodyTemp > this.todayHigh) {
-      this.todayHigh = this.bodyTemp;
-    }
-    if (this.bodyTemp < this.todayLow) {
-      this.todayLow = this.bodyTemp;
-    }
-    
-    // Add to history
-    this.updateHistory();
-  }
-
-  updateHistory() {
-    const now = new Date();
-    const timeStr = now.getHours().toString().padStart(2, '0') + ':00';
-    
-    // Update existing hour or add new
-    const existing = this.tempHistory.find(item => item.time === timeStr);
-    if (existing) {
-      existing.temp = this.bodyTemp;
-    } else {
-      this.tempHistory.push({ time: timeStr, temp: this.bodyTemp });
-      if (this.tempHistory.length > 7) {
-        this.tempHistory.shift();
+  loadLatest(): void {
+    this.loading = true;
+    this.humanTempService.getLatest().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.latestReading = res.data as HumanTempReading;
+          this.updateLastUpdated();
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'MLX90614 sensor offline';
+        this.loading = false;
       }
+    });
+  }
+
+  updateLastUpdated(): void {
+    if (this.latestReading?.timestamp) {
+      const date = new Date(this.latestReading.timestamp);
+      this.lastUpdated = date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
     }
   }
 
-  getMercuryHeight(): number {
-    // Convert 35-39°C to 0-100% height
-    return ((this.bodyTemp - 35) / 4) * 100;
+  // === Real Data Getters ===
+  get bodyTemp(): number {
+    return this.latestReading?.objectTemp ?? 0;
   }
 
-  getChartHeight(temp: number): number {
-    // Convert 35-39°C to 0-100% height
-    return ((temp - 35) / 4) * 80 + 10;
+  get ambientTemp(): number {
+    return this.latestReading?.ambientTemp ?? 0;
   }
 
-  getBarClass(temp: number): string {
-    if (temp >= 38) return 'fever';
-    if (temp >= 37) return 'elevated';
-    return 'normal';
+  get unit(): string {
+    return this.latestReading?.unit ?? 'C';
   }
 
-  getTempStatus(): string {
-    if (this.bodyTemp >= 38) return 'FEVER';
-    if (this.bodyTemp >= 37) return 'ELEVATED';
-    return 'NORMAL';
+  // === Status & Classes ===
+  get tempStatus(): string {
+    if (this.bodyTemp >= 38.0) return 'FEVER';
+    if (this.bodyTemp >= 37.3) return 'ELEVATED';
+    if (this.bodyTemp >= 36.0) return 'NORMAL';
+    return 'LOW';
   }
 
-  getTempStatusClass(): string {
-    if (this.bodyTemp >= 38) return 'status-fever';
-    if (this.bodyTemp >= 37) return 'status-elevated';
-    return 'status-normal';
+  get tempStatusClass(): string {
+    switch (this.tempStatus) {
+      case 'FEVER': return 'status-fever';
+      case 'ELEVATED': return 'status-elevated';
+      case 'NORMAL': return 'status-normal';
+      default: return 'status-low';
+    }
+  }
+
+  get tempIcon(): string {
+    switch (this.tempStatus) {
+      case 'FEVER': return '🤒';
+      case 'ELEVATED': return '😓';
+      case 'NORMAL': return '😊';
+      default: return '🥶';
+    }
+  }
+
+  get connectionStatus(): string {
+    if (this.loading) return 'connecting';
+    if (this.error) return 'offline';
+    return 'online';
+  }
+
+  get connectionStatusText(): string {
+    if (this.loading) return 'Connecting...';
+    if (this.error) return 'Sensor Off';
+    return 'Live Reading';
+  }
+
+  // === Thermometer Visualization ===
+  get mercuryHeight(): number {
+    // Map 35°C → 0%, 39°C → 100%
+    return Math.max(0, Math.min(100, ((this.bodyTemp - 35) / 4) * 100));
+  }
+
+  get isFever(): boolean {
+    return this.bodyTemp >= 38.0;
+  }
+
+  get isElevated(): boolean {
+    return this.bodyTemp >= 37.3 && this.bodyTemp < 38.0;
   }
 }

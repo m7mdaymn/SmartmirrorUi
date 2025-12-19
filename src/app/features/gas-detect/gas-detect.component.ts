@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { GasDetectionService, GasReading } from '../../core/services/gas-detection.service';
+import { interval, Subscription, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-gas-detect',
@@ -10,289 +12,180 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./gas-detect.component.scss']
 })
 export class GasDetectComponent implements OnInit, OnDestroy {
-  // Emergency State
-  emergencyActive: boolean = false;
-  alarmActive: boolean = false;
-  
-  // Gas Levels
-  co2Level: number = 450;
-  methaneLevel: number = 2.5;
-  smokeLevel: number = 15;
-  lastUpdate: Date = new Date();
-  
-  // System Status
-  ventilationActive: boolean = false;
-  ventilationStatus: string = 'Closed';
-  
-  // History Data
-  selectedPeriod: string = '1h';
-  gasHistory: any[] = [];
-  
-  // Chart Data
-  gridLines = [
-    { value: '0', position: 100 },
-    { value: '500', position: 66 },
-    { value: '1000', position: 33 },
-    { value: '1500', position: 0 }
-  ];
-  
-  timeLabels = [
-    { time: '00:00', position: 0 },
-    { time: '06:00', position: 25 },
-    { time: '12:00', position: 50 },
-    { time: '18:00', position: 75 },
-    { time: '24:00', position: 100 }
-  ];
+  latestReading: GasReading | null = null;
+  loading = true;
+  error: string | null = null;
+  lastUpdated: string = '';
 
-  private updateInterval: any;
-  private alarmSound: HTMLAudioElement;
+  private pollSubscription!: Subscription;
 
-  constructor() {
-    this.alarmSound = new Audio();
-    this.alarmSound.src = 'assets/alarm.mp3'; // You'll need to add this file
-    this.alarmSound.loop = true;
-  }
+  constructor(private gasService: GasDetectionService) {}
 
-  ngOnInit() {
-    this.generateHistoryData();
-    this.updateInterval = setInterval(() => {
-      this.updateGasLevels();
-    }, 3000);
-  }
-
-  ngOnDestroy() {
-    if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-    }
-    if (this.alarmActive) {
-      this.alarmSound.pause();
-    }
-  }
-
-  updateGasLevels() {
-    // Simulate realistic gas level changes
-    const co2Change = (Math.random() * 30) - 15; // -15 to +15
-    this.co2Level = Math.max(400, Math.min(2000, this.co2Level + co2Change));
-    
-    const methaneChange = (Math.random() * 0.5) - 0.25; // -0.25 to +0.25
-    this.methaneLevel = Math.max(0, Math.min(20, this.methaneLevel + methaneChange));
-    this.methaneLevel = Math.round(this.methaneLevel * 10) / 10;
-    
-    const smokeChange = (Math.random() * 5) - 2.5; // -2.5 to +2.5
-    this.smokeLevel = Math.max(0, Math.min(100, this.smokeLevel + smokeChange));
-    this.smokeLevel = Math.round(this.smokeLevel);
-    
-    this.lastUpdate = new Date();
-    
-    // Check for emergency conditions
-    this.checkEmergencyConditions();
-    
-    // Update history
-    this.addToHistory();
-  }
-
-  checkEmergencyConditions() {
-    // Check if any gas levels are dangerous
-    const co2Danger = this.co2Level > 1000;
-    const methaneDanger = this.methaneLevel > 10;
-    const smokeDanger = this.smokeLevel > 50;
-    
-    if (co2Danger || methaneDanger || smokeDanger) {
-      this.triggerEmergency();
-    } else {
-      this.emergencyActive = false;
-    }
-    
-    // Auto-activate ventilation if CO2 is high
-    if (this.co2Level > 800 && !this.ventilationActive) {
-      this.ventilationActive = true;
-      this.ventilationStatus = 'Auto-Opened';
-    }
-    
-    // Auto-close ventilation if levels are safe
-    if (this.co2Level < 500 && this.methaneLevel < 2 && this.smokeLevel < 10 && this.ventilationActive) {
-      this.ventilationActive = false;
-      this.ventilationStatus = 'Auto-Closed';
-    }
-  }
-
-  triggerEmergency() {
-    this.emergencyActive = true;
-    if (!this.alarmActive) {
-      this.toggleAlarm(); // Auto-activate alarm
-    }
-  }
-
-  dismissEmergency() {
-    this.emergencyActive = false;
-    if (this.alarmActive) {
-      this.toggleAlarm(); // Turn off alarm
-    }
-  }
-
-  toggleAlarm() {
-    this.alarmActive = !this.alarmActive;
-    
-    if (this.alarmActive) {
-      // In a real app, play alarm sound
-      // this.alarmSound.play().catch(e => console.log('Audio error:', e));
-      console.log('ALARM ACTIVATED!');
-    } else {
-      // this.alarmSound.pause();
-      // this.alarmSound.currentTime = 0;
-      console.log('Alarm deactivated');
-    }
-  }
-
-  toggleVentilation() {
-    this.ventilationActive = !this.ventilationActive;
-    this.ventilationStatus = this.ventilationActive ? 'Open' : 'Closed';
-  }
-
-  sendEmergencyAlert() {
-    // In real app, send SMS/Email/Notification
-    console.log('Emergency alert sent to contacts!');
-    alert('Emergency alert has been sent to registered contacts!');
-  }
-
-  resetSystem() {
-    this.co2Level = 400;
-    this.methaneLevel = 0;
-    this.smokeLevel = 0;
-    this.emergencyActive = false;
-    this.alarmActive = false;
-    this.ventilationActive = false;
-    this.ventilationStatus = 'Closed';
-    
-    console.log('System reset to safe levels');
-    alert('Gas detection system has been reset');
-  }
-
-  generateHistoryData() {
-    this.gasHistory = [];
-    const now = new Date();
-    
-    for (let i = 23; i >= 0; i--) {
-      const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-      this.gasHistory.push({
-        time: time.getHours().toString().padStart(2, '0') + ':00',
-        co2: 400 + Math.random() * 600,
-        methane: Math.random() * 5,
-        smoke: Math.random() * 30
+  ngOnInit(): void {
+    this.pollSubscription = interval(8000)
+      .pipe(switchMap(() => this.gasService.getLatest()))
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.latestReading = res.data as GasReading;
+            this.updateLastUpdated();
+            this.loading = false;
+            this.error = null;
+          } else {
+            this.error = 'Waiting for sensor data...';
+            this.loading = false;
+          }
+        },
+        error: () => {
+          this.error = 'MQ135 sensor not enabled';
+          this.loading = false;
+        }
       });
-    }
+
+    this.loadLatest(); // Initial fetch
   }
 
-  addToHistory() {
-    const now = new Date();
-    const timeStr = now.getHours().toString().padStart(2, '0') + ':00';
-    
-    // Update existing hour or add new
-    const existing = this.gasHistory.find(item => item.time === timeStr);
-    if (existing) {
-      existing.co2 = this.co2Level;
-      existing.methane = this.methaneLevel;
-      existing.smoke = this.smokeLevel;
-    } else {
-      this.gasHistory.push({
-        time: timeStr,
-        co2: this.co2Level,
-        methane: this.methaneLevel,
-        smoke: this.smokeLevel
-      });
-      
-      // Keep only 24 hours
-      if (this.gasHistory.length > 24) {
-        this.gasHistory.shift();
+  ngOnDestroy(): void {
+    this.pollSubscription?.unsubscribe();
+  }
+
+  loadLatest(): void {
+    this.loading = true;
+    this.gasService.getLatest().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.latestReading = res.data as GasReading;
+          this.updateLastUpdated();
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Sensor offline';
+        this.loading = false;
       }
+    });
+  }
+
+  updateLastUpdated(): void {
+    if (this.latestReading?.timestamp) {
+      const date = new Date(this.latestReading.timestamp);
+      this.lastUpdated = date.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
     }
   }
 
-  selectPeriod(period: string) {
-    this.selectedPeriod = period;
-    this.generateHistoryData(); // Regenerate for selected period
+  // === Getters for Real Data ===
+  get rawValue(): number {
+    return this.latestReading?.rawValue ?? 0;
   }
 
-  getSystemStatus(): string {
-    if (this.emergencyActive) return 'emergency';
-    if (this.co2Level > 800 || this.methaneLevel > 5 || this.smokeLevel > 25) return 'warning';
-    return 'safe';
+  get quality(): string {
+    return this.latestReading?.quality ?? 'Unknown';
   }
 
-  getSystemStatusText(): string {
-    switch(this.getSystemStatus()) {
-      case 'emergency': return 'EMERGENCY';
-      case 'warning': return 'WARNING';
-      default: return 'ALL SAFE';
+  // === Enhanced Analysis from MQ135 Raw Value ===
+  get co2Ppm(): number {
+    // Approximate CO2 estimation based on typical MQ135 calibration
+    // Normal clean air: ~400ppm → raw ~700-900
+    // High CO2 (stuffy room): 1000-2000ppm → raw increases
+    if (this.rawValue < 800) return 400;
+    if (this.rawValue < 1500) return Math.round(400 + (this.rawValue - 800) * 1.2);
+    if (this.rawValue < 2500) return Math.round(1000 + (this.rawValue - 1500) * 0.8);
+    return Math.round(1500 + (this.rawValue - 2500) * 0.5);
+  }
+
+  get smokeLevel(): number {
+    // Approximate smoke/particle estimation (higher raw = more reducing gases/smoke)
+    if (this.rawValue < 1000) return 5;
+    if (this.rawValue < 2000) return Math.round(10 + (this.rawValue - 1000) / 50);
+    if (this.rawValue < 3000) return Math.round(30 + (this.rawValue - 2000) / 40);
+    return Math.round(60 + (this.rawValue - 3000) / 30);
+  }
+
+  // === Status & Classes ===
+  get qualityClass(): string {
+    switch (this.quality) {
+      case 'Excellent': return 'excellent';
+      case 'Good': return 'good';
+      case 'Moderate': return 'moderate';
+      case 'Poor': return 'poor';
+      case 'Hazardous': return 'danger';
+      default: return 'unknown';
     }
   }
 
-  getGasCardClass(gasType: string): string {
-    switch(gasType) {
-      case 'co2':
-        if (this.co2Level > 1000) return 'danger';
-        if (this.co2Level > 800) return 'warning';
-        return 'safe';
-      case 'methane':
-        if (this.methaneLevel > 10) return 'danger';
-        if (this.methaneLevel > 5) return 'warning';
-        return 'safe';
-      case 'smoke':
-        if (this.smokeLevel > 50) return 'danger';
-        if (this.smokeLevel > 25) return 'warning';
-        return 'safe';
-      default: return 'safe';
+  get qualityIcon(): string {
+    switch (this.quality) {
+      case 'Excellent':
+      case 'Good': return '✅';
+      case 'Moderate': return '⚠️';
+      case 'Poor':
+      case 'Hazardous': return '🚨';
+      default: return '❓';
     }
   }
 
-  getGasStatus(gasType: string): string {
-    return this.getGasCardClass(gasType);
+  get co2Status(): string {
+    if (this.co2Ppm <= 800) return 'Good';
+    if (this.co2Ppm <= 1200) return 'Moderate';
+    if (this.co2Ppm <= 2000) return 'Poor';
+    return 'Dangerous';
   }
 
-  getGasStatusText(gasType: string): string {
-    switch(this.getGasCardClass(gasType)) {
-      case 'danger': return 'DANGER';
-      case 'warning': return 'WARNING';
-      default: return 'SAFE';
-    }
+  get co2Class(): string {
+    if (this.co2Ppm <= 800) return 'good';
+    if (this.co2Ppm <= 1200) return 'moderate';
+    if (this.co2Ppm <= 2000) return 'poor';
+    return 'danger';
   }
 
-  getCo2Percentage(): number {
-    // Convert 400-2000 ppm to 0-100%
-    return Math.min(100, ((this.co2Level - 400) / 1600) * 100);
+  get smokeStatus(): string {
+    if (this.smokeLevel <= 25) return 'Low';
+    if (this.smokeLevel <= 50) return 'Moderate';
+    if (this.smokeLevel <= 100) return 'High';
+    return 'Hazardous';
   }
 
-  getMethanePercentage(): number {
-    // Convert 0-20% LEL to 0-100%
-    return Math.min(100, (this.methaneLevel / 20) * 100);
+  get smokeClass(): string {
+    if (this.smokeLevel <= 25) return 'good';
+    if (this.smokeLevel <= 50) return 'moderate';
+    if (this.smokeLevel <= 100) return 'poor';
+    return 'danger';
   }
 
-  getSmokePercentage(): number {
-    // Convert 0-100 µg/m³ to 0-100%
-    return Math.min(100, this.smokeLevel);
+  get isDangerous(): boolean {
+    return this.quality === 'Poor' || this.quality === 'Hazardous' || this.co2Ppm > 1500 || this.smokeLevel > 75;
   }
 
-  getCo2LinePoints(): string {
-    return this.gasHistory.map((data, i) => {
-      const x = (i / (this.gasHistory.length - 1)) * 100;
-      const y = 100 - ((data.co2 - 400) / 1600) * 100;
-      return `${x},${y}`;
-    }).join(' ');
+  get isWarning(): boolean {
+    return this.quality === 'Moderate' || this.co2Ppm > 1000 || this.smokeLevel > 40;
   }
 
-  getMethaneLinePoints(): string {
-    return this.gasHistory.map((data, i) => {
-      const x = (i / (this.gasHistory.length - 1)) * 100;
-      const y = 100 - (data.methane / 20) * 100;
-      return `${x},${y}`;
-    }).join(' ');
+  // === Percentages for Meters ===
+  get rawPercentage(): number {
+    return Math.min(100, (this.rawValue / 4095) * 100);
   }
 
-  getSmokeLinePoints(): string {
-    return this.gasHistory.map((data, i) => {
-      const x = (i / (this.gasHistory.length - 1)) * 100;
-      const y = 100 - (data.smoke / 100) * 100;
-      return `${x},${y}`;
-    }).join(' ');
+  get co2Percentage(): number {
+    return Math.min(100, ((this.co2Ppm - 400) / 2000) * 100);
+  }
+
+  get smokePercentage(): number {
+    return Math.min(100, (this.smokeLevel / 150) * 100);
+  }
+
+  get connectionStatus(): string {
+    if (this.loading) return 'connecting';
+    if (this.error) return 'offline';
+    return 'online';
+  }
+
+  get connectionStatusText(): string {
+    if (this.loading) return 'Connecting...';
+    if (this.error) return 'Sensor Off';
+    return 'Live Monitoring';
   }
 }

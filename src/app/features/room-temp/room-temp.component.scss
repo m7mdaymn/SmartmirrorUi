@@ -110,7 +110,7 @@
         &.optimal {
           background: rgba(46, 204, 113, 0.15);
           border: 1px solid rgba(46, 204, 113, 0.3);
-          
+
           .status-dot {
             background: #2ecc71;
             animation: pulse 2s infinite;
@@ -120,7 +120,7 @@
         &.good {
           background: rgba(255, 193, 7, 0.15);
           border: 1px solid rgba(255, 193, 7, 0.3);
-          
+
           .status-dot {
             background: #ffc107;
           }
@@ -129,7 +129,7 @@
         &.poor {
           background: rgba(255, 71, 87, 0.15);
           border: 1px solid rgba(255, 71, 87, 0.3);
-          
+
           .status-dot {
             background: #ff4757;
             animation: pulse 1.5s infinite;
@@ -170,7 +170,7 @@
       // Temperature Card
       &.temperature {
         border-top: 4px solid #64c8ff;
-        
+
         .sensor-icon {
           background: rgba(100, 200, 255, 0.2);
         }
@@ -183,7 +183,7 @@
       // Humidity Card
       &.humidity {
         border-top: 4px solid #2ecc71;
-        
+
         .sensor-icon {
           background: rgba(46, 204, 113, 0.2);
         }
@@ -196,7 +196,7 @@
       // Air Quality Card
       &.air-quality {
         border-top: 4px solid #ffc107;
-        
+
         .sensor-icon {
           background: rgba(255, 193, 7, 0.2);
         }
@@ -241,19 +241,19 @@
           font-weight: 300;
           line-height: 1;
           margin-bottom: 10px;
-          
+
           .temperature & {
             background: linear-gradient(45deg, #64c8ff, #1e90ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
           }
-          
+
           .humidity & {
             background: linear-gradient(45deg, #2ecc71, #27ae60);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
           }
-          
+
           .air-quality & {
             background: linear-gradient(45deg, #ffc107, #ff9800);
             -webkit-background-clip: text;
@@ -785,15 +785,15 @@
     .comfort-grid {
       grid-template-columns: 1fr !important;
       gap: 30px !important;
-      
+
       .comfort-meter {
         order: 1;
       }
-      
+
       .comfort-factors {
         order: 2;
       }
-      
+
       .comfort-tips {
         order: 3;
       }
@@ -827,4 +827,48 @@
       gap: 15px;
     }
   }
+}
+.loading-overlay, .error-message {
+  text-align: center;
+  padding: 40px;
+  color: #aaa;
+  font-size: 1.2em;
+}
+
+.room-status {
+  &.online .status-dot { background: #2ecc71; }
+  &.connecting .status-dot { background: #f39c12; animation: pulse 1.5s infinite; }
+  &.offline .status-dot { background: #e74c3c; }
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.comfort-meter {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.meter-circle {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  color: white;
+  font-size: 2em;
+  font-weight: bold;
+  margin: 0 auto;
+  background: #34495e;
+}
+
+.meter-value {
+  font-size: 3em;
 }
