@@ -22,7 +22,7 @@
         <p class="subtitle">Deep learning facial recognition & skincare recommendations</p>
       </div>
     </div>
-    
+
     <div class="analysis-status" [class]="analysisStatus">
       <div class="status-dot"></div>
       <span>{{ getStatusText() }}</span>
@@ -45,35 +45,35 @@
     <div class="face-display-section">
       <div class="camera-preview">
         <div class="camera-frame" [class.active]="isScanning">
-          
+
           <!-- Scanning Animation -->
           <div class="scan-line" *ngIf="isScanning"></div>
-          
+
           <!-- Idle State: Before Analysis -->
           <div class="camera-placeholder" *ngIf="analysisStatus === 'idle'">
             <div class="camera-icon">📷</div>
             <p>Click "Start AI Analysis" to begin</p>
             <p class="small-text">Python AI will capture and analyze your face</p>
           </div>
-          
+
           <!-- Scanning State: During Analysis -->
           <div class="scanning-indicator" *ngIf="isScanning">
             <div class="spinner"></div>
             <p>🤖 AI analyzing your skin...</p>
             <p class="small-text">Processing with MediaPipe & OpenCV</p>
           </div>
-          
+
           <!-- Complete State: Show Result Image -->
-          <img *ngIf="capturedImage && analysisStatus === 'complete'" 
-               [src]="capturedImage" 
+          <img *ngIf="capturedImage && analysisStatus === 'complete'"
+               [src]="capturedImage"
                class="captured-image"
                alt="Analysis Result">
         </div>
       </div>
 
       <div class="camera-controls">
-        <button class="control-btn primary" 
-                (click)="startScan()" 
+        <button class="control-btn primary"
+                (click)="startScan()"
                 [disabled]="isScanning">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
@@ -81,9 +81,9 @@
           </svg>
           {{ isScanning ? 'AI Analyzing...' : 'Start AI Analysis' }}
         </button>
-        
-        <button class="control-btn" 
-                (click)="resetScan()" 
+
+        <button class="control-btn"
+                (click)="resetScan()"
                 [disabled]="isScanning">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
@@ -96,21 +96,21 @@
 
     <!-- Right: Analysis Results -->
     <div class="analysis-results">
-      
+
       <!-- Placeholder: Before Analysis -->
       <div class="placeholder-info" *ngIf="analysisStatus === 'idle' || analysisStatus === 'scanning'">
         <div class="placeholder-icon">🔬</div>
         <p>{{ analysisStatus === 'scanning' ? 'Analyzing your skin...' : 'Ready to analyze' }}</p>
         <p class="small-text">
-          {{ analysisStatus === 'scanning' 
-             ? 'Backend calling Python AI service...' 
+          {{ analysisStatus === 'scanning'
+             ? 'Backend calling Python AI service...'
              : 'Click "Start AI Analysis" to get personalized skincare recommendations' }}
         </p>
       </div>
 
       <!-- Results: After Successful Analysis -->
       <div *ngIf="analysisStatus === 'complete'">
-        
+
         <!-- Basic Info: ONLY IF DATA EXISTS -->
         <div class="basic-info" *ngIf="skinType || condition">
           <div class="info-item" *ngIf="skinType">

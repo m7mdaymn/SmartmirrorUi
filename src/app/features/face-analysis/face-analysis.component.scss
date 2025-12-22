@@ -96,7 +96,7 @@
       &.idle {
         background: rgba(100, 200, 255, 0.15);
         border: 1px solid rgba(100, 200, 255, 0.3);
-        
+
         .status-dot {
           background: #64c8ff;
           animation: pulse 2s infinite;
@@ -106,7 +106,7 @@
       &.scanning {
         background: rgba(255, 193, 7, 0.15);
         border: 1px solid rgba(255, 193, 7, 0.3);
-        
+
         .status-dot {
           background: #ffc107;
           animation: scanning 1.5s infinite;
@@ -116,7 +116,7 @@
       &.complete {
         background: rgba(46, 204, 113, 0.15);
         border: 1px solid rgba(46, 204, 113, 0.3);
-        
+
         .status-dot {
           background: #2ecc71;
         }
@@ -167,7 +167,7 @@
           &.active {
             border-color: #c85cff;
             box-shadow: 0 0 30px rgba(200, 92, 255, 0.3);
-            
+
             .scan-line {
               position: absolute;
               top: 0;
@@ -211,13 +211,13 @@
 
           .camera-placeholder {
             text-align: center;
-            
+
             .camera-icon {
               font-size: 64px;
               margin-bottom: 20px;
               opacity: 0.5;
             }
-            
+
             p {
               font-size: 16px;
               opacity: 0.7;
@@ -258,7 +258,7 @@
           &.primary {
             background: rgba(200, 92, 255, 0.2);
             border-color: rgba(200, 92, 255, 0.4);
-            
+
             &:hover:not(:disabled) {
               background: rgba(200, 92, 255, 0.3);
               border-color: rgba(200, 92, 255, 0.6);
@@ -417,8 +417,8 @@
           position: relative;
           width: 120px;
           height: 120px;
-          background: conic-gradient(#c85cff 0%, #c85cff ), 
-                   
+          background: conic-gradient(#c85cff 0%, #c85cff ),
+
           rgba(255, 255, 255, 0.1) , rgba(255, 255, 255, 0.1) 100%;
           border-radius: 50%;
           display: flex;

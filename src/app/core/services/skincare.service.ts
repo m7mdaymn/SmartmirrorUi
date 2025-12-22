@@ -38,9 +38,9 @@ export class SkincareService {
    */
   analyzeSkin(): Observable<SkincareAnalysisResponse> {
     console.log('🔬 Calling skincare AI analysis...');
-    
+
     return this.http.post<SkincareAnalysisResponse>(
-      API_ENDPOINTS.skincare.analyze, 
+      API_ENDPOINTS.skincare.analyze,
       {} // Empty body - backend handles camera
     ).pipe(
       tap(response => {

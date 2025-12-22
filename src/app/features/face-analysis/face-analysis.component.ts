@@ -1,7 +1,32 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { SkincareService, SkincareAnalysisResponse } from '../../core/services/skincare.service';
+import { SkincareService } from '../../core/services/skincare.service';
+
+// Updated interface to match backend response
+interface SkincareAnalysisResponse {
+  success: boolean;
+  message?: string;
+  disclaimer?: string;
+  data?: {
+    skinType: string;
+    condition: string;
+    morningRoutine: string[];
+    nightRoutine: string[];
+    recommendedIngredients: string[];
+    avoidIngredients: string[];
+    lifestyleTips: string[];
+  };
+  aiAnalysis?: {
+    detected: boolean;
+    confidence: number;
+    regions_analyzed: number;
+    skin_type_distribution?: any;
+    condition_distribution?: any;
+    message: string;
+  };
+  warning?: string;
+}
 
 @Component({
   selector: 'app-face-analysis',
@@ -16,7 +41,7 @@ export class FaceAnalysisComponent implements OnInit {
   capturedImage: string | null = null;
   analysisStatus: string = 'idle'; // 'idle' | 'scanning' | 'complete' | 'error'
   errorMessage: string = '';
-  
+
   // Real data from backend - ALL EMPTY BY DEFAULT
   skinType: string = '';
   condition: string = '';
@@ -25,13 +50,14 @@ export class FaceAnalysisComponent implements OnInit {
   recommendedIngredients: string[] = [];
   avoidIngredients: string[] = [];
   lifestyleTips: string[] = [];
-  
+
   // AI confidence (only set after successful analysis)
   confidence: number = 0;
-  
+  regionsAnalyzed: number = 0;
+
   // Recommendations (will be populated from backend only)
   recommendations: any[] = [];
-  
+
   // Daily Routine (will be populated from backend only)
   dailyRoutine: any[] = [];
 
@@ -45,7 +71,7 @@ export class FaceAnalysisComponent implements OnInit {
   checkServiceStatus() {
     this.skincareService.checkStatus().subscribe({
       next: (res) => {
-        console.log('✅ Skincare API Status:', res.message);
+        console.log('✅ Skincare API Status:', res);
       },
       error: (err) => {
         console.warn('⚠️ Skincare API not responding:', err.message);
@@ -56,24 +82,24 @@ export class FaceAnalysisComponent implements OnInit {
 
   startScan() {
     if (this.isScanning) return;
-    
+
     // Reset everything before new scan
     this.resetData();
-    
+
     this.isScanning = true;
     this.analysisStatus = 'scanning';
     this.errorMessage = '';
     this.faceDetected = true;
-    
+
     console.log('📸 Starting AI skin analysis...');
     console.log('🔗 Calling: POST http://localhost:5000/api/skincare/analyze');
-    
+
     // Call the real backend API
     this.skincareService.analyzeSkin().subscribe({
-      next: (response: SkincareAnalysisResponse) => {
+      next: (response: any) => {
         console.log('✅ Analysis Complete:', response);
-        
-        if (response.success && response.data) {
+
+        if (response.success) {
           this.processAnalysisResults(response);
         } else {
           this.handleAnalysisError(response.message || 'Analysis failed');
@@ -81,57 +107,79 @@ export class FaceAnalysisComponent implements OnInit {
       },
       error: (error) => {
         console.error('❌ Analysis Error:', error);
-        this.handleAnalysisError(error.message);
+        this.handleAnalysisError(error.message || 'Analysis failed');
       }
     });
   }
 
   processAnalysisResults(response: SkincareAnalysisResponse) {
-    const data = response.data!;
-    
+    const data = response.data;
+    const aiAnalysis = response.aiAnalysis;
+
     console.log('📊 Processing backend data:', {
-      skinType: data.skinType,
-      condition: data.condition,
-      morningRoutine: data.morningRoutine?.length || 0,
-      nightRoutine: data.nightRoutine?.length || 0,
-      ingredients: data.recommendedIngredients?.length || 0
+      skinType: data?.skinType,
+      condition: data?.condition,
+      aiConfidence: aiAnalysis?.confidence || 0,
+      regionsAnalyzed: aiAnalysis?.regions_analyzed || 0,
+      morningRoutine: data?.morningRoutine?.length || 0,
+      nightRoutine: data?.nightRoutine?.length || 0,
+      ingredients: data?.recommendedIngredients?.length || 0
     });
-    
+
     // Store ONLY real data from backend
-    this.skinType = data.skinType || '';
-    this.condition = data.condition || '';
-    this.morningRoutine = data.morningRoutine || [];
-    this.nightRoutine = data.nightRoutine || [];
-    this.recommendedIngredients = data.recommendedIngredients || [];
-    this.avoidIngredients = data.avoidIngredients || [];
-    this.lifestyleTips = data.lifestyleTips || [];
-    
+    this.skinType = data?.skinType || '';
+    this.condition = data?.condition || '';
+    this.morningRoutine = data?.morningRoutine || [];
+    this.nightRoutine = data?.nightRoutine || [];
+    this.recommendedIngredients = data?.recommendedIngredients || [];
+    this.avoidIngredients = data?.avoidIngredients || [];
+    this.lifestyleTips = data?.lifestyleTips || [];
+
+    // Get REAL confidence from AI
+    this.confidence = aiAnalysis?.confidence || 0;
+    this.regionsAnalyzed = aiAnalysis?.regions_analyzed || 0;
+
     // Build recommendations from backend data
     this.buildRecommendations();
-    
+
     // Build daily routine from backend data
     this.buildDailyRoutine();
-    
+
     // Update UI state
     this.isScanning = false;
     this.analysisStatus = 'complete';
-    this.confidence = 95; // High confidence from AI
-    
+
     // Generate a simple representation image
     this.capturedImage = this.generateResultImage();
-    
+
     console.log('✨ Analysis processed successfully');
     console.log('📋 Final data:', {
       recommendations: this.recommendations.length,
       routineSteps: this.dailyRoutine.length,
       avoidIngredients: this.avoidIngredients.length,
-      lifestyleTips: this.lifestyleTips.length
+      lifestyleTips: this.lifestyleTips.length,
+      aiConfidence: this.confidence + '%',
+      regionsAnalyzed: this.regionsAnalyzed
     });
+
+    // Show AI analysis details if available
+    if (aiAnalysis) {
+      console.log('🤖 AI Analysis:', {
+        message: aiAnalysis.message,
+        skinDistribution: aiAnalysis.skin_type_distribution,
+        conditionDistribution: aiAnalysis.condition_distribution
+      });
+    }
+
+    // Show warning if no recommendations found
+    if (response.warning) {
+      console.warn('⚠️', response.warning);
+    }
   }
 
   buildRecommendations() {
     this.recommendations = [];
-    
+
     // Build from morning routine
     if (this.morningRoutine.length > 0) {
       this.recommendations.push({
@@ -141,7 +189,7 @@ export class FaceAnalysisComponent implements OnInit {
         priority: 'high'
       });
     }
-    
+
     // Build from recommended ingredients
     if (this.recommendedIngredients.length > 0) {
       this.recommendations.push({
@@ -151,7 +199,7 @@ export class FaceAnalysisComponent implements OnInit {
         priority: 'high'
       });
     }
-    
+
     // Build from night routine
     if (this.nightRoutine.length > 0) {
       this.recommendations.push({
@@ -161,7 +209,7 @@ export class FaceAnalysisComponent implements OnInit {
         priority: 'medium'
       });
     }
-    
+
     // Build from lifestyle tips
     if (this.lifestyleTips.length > 0) {
       this.recommendations.push({
@@ -175,7 +223,7 @@ export class FaceAnalysisComponent implements OnInit {
 
   buildDailyRoutine() {
     this.dailyRoutine = [];
-    
+
     // Morning routine - start at 7:00 AM
     this.morningRoutine.forEach((step, i) => {
       const hour = 7 + Math.floor(i / 4);
@@ -187,7 +235,7 @@ export class FaceAnalysisComponent implements OnInit {
         description: step
       });
     });
-    
+
     // Night routine - start at 8:00 PM (20:00)
     this.nightRoutine.forEach((step, i) => {
       const hour = 20 + Math.floor(i / 4);
@@ -216,7 +264,7 @@ export class FaceAnalysisComponent implements OnInit {
     this.analysisStatus = 'error';
     this.errorMessage = message;
     this.faceDetected = false;
-    
+
     console.error('❌ Analysis failed:', message);
   }
 
@@ -226,9 +274,9 @@ export class FaceAnalysisComponent implements OnInit {
     this.capturedImage = null;
     this.analysisStatus = 'idle';
     this.errorMessage = '';
-    
+
     this.resetData();
-    
+
     console.log('🔄 Scan reset - ready for new analysis');
   }
 
@@ -242,6 +290,7 @@ export class FaceAnalysisComponent implements OnInit {
     this.avoidIngredients = [];
     this.lifestyleTips = [];
     this.confidence = 0;
+    this.regionsAnalyzed = 0;
     this.recommendations = [];
     this.dailyRoutine = [];
   }
@@ -266,20 +315,20 @@ export class FaceAnalysisComponent implements OnInit {
           </linearGradient>
         </defs>
         <rect width="100%" height="100%" fill="url(#bgGrad)"/>
-        
+
         <!-- Face -->
         <circle cx="200" cy="150" r="80" fill="#e2e8f0" opacity="0.9"/>
-        
+
         <!-- Eyes -->
         <circle cx="170" cy="135" r="12" fill="#2d3748"/>
         <circle cx="230" cy="135" r="12" fill="#2d3748"/>
-        
+
         <!-- Nose -->
         <ellipse cx="200" cy="165" rx="8" ry="14" fill="#cbd5e0"/>
-        
+
         <!-- Smile -->
         <path d="M 170 195 Q 200 210 230 195" stroke="#2d3748" stroke-width="5" fill="none" stroke-linecap="round"/>
-        
+
         <!-- Result Text -->
         <text x="200" y="280" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff" text-anchor="middle">
           ${this.skinType}
@@ -288,7 +337,7 @@ export class FaceAnalysisComponent implements OnInit {
           ${this.condition}
         </text>
         <text x="200" y="340" font-family="Arial, sans-serif" font-size="16" fill="#48bb78" text-anchor="middle">
-          ✓ AI Analysis Complete
+          ✓ AI: ${this.confidence}% (${this.regionsAnalyzed} regions)
         </text>
       </svg>
     `);
