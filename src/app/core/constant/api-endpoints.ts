@@ -42,6 +42,8 @@ export const API_ENDPOINTS = {
     status: `${API}/control/status`,
     enableAll: `${API}/control/enable-all`,
     disableAll: `${API}/control/disable-all`,
-    toggleSensor: (sensorName: string) => `${API}/control/sensor/${sensorName}`
+    toggleSensor: (sensorName: string) => `${API}/control/sensor/${sensorName}`,
+    enableSensor: (sensorName: string) => `${API}/control/sensor/${sensorName}`,
+    disableSensor: (sensorName: string) => `${API}/control/sensor/${sensorName}`
   }
 };

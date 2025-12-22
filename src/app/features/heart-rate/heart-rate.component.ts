@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { HeartRateService, HeartRateReading } from '../../core/services/heart-rate.service';
 import { interval, Subscription, switchMap } from 'rxjs';
 
@@ -17,10 +17,14 @@ export class HeartRateComponent implements OnInit, OnDestroy {
   error: string | null = null;
   lastUpdated = '';
   fingerDetected = false;
+  isDisabling = false;
 
   private pollSubscription!: Subscription;
 
-  constructor(private heartRateService: HeartRateService) {}
+  constructor(
+    private heartRateService: HeartRateService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     // Poll every 3 seconds — MAX30105 sends data only after ~9s measurement
@@ -63,6 +67,27 @@ export class HeartRateComponent implements OnInit, OnDestroy {
           this.loading = false;
           this.updateLastUpdated();
         }
+      }
+    });
+  }
+
+  /**
+   * Handle back button click - disable MAX30105 sensor and navigate home
+   */
+  onBackClick(): void {
+    this.isDisabling = true;
+
+    this.heartRateService.disableSensor().subscribe({
+      next: (response) => {
+        console.log('MAX30105 sensor disabled successfully:', response);
+        this.isDisabling = false;
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        console.error('Failed to disable MAX30105 sensor:', err);
+        this.isDisabling = false;
+        // Navigate home anyway even if disable fails
+        this.router.navigate(['/']);
       }
     });
   }

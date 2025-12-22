@@ -21,6 +21,13 @@ export interface HeartRateApiResponse {
   count?: number;
 }
 
+export interface SensorControlResponse {
+  success: boolean;
+  message?: string;
+  sensor?: string;
+  enabled?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -61,6 +68,32 @@ export class HeartRateService {
   getAll(limit: number = 50): Observable<HeartRateApiResponse> {
     const url = `${API_ENDPOINTS.heartRate.getAll}?limit=${limit}`;
     return this.http.get<HeartRateApiResponse>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Disable the MAX30105 heart rate sensor
+   * Sends POST request to /api/control/sensor/max30105 with {enabled: false}
+   */
+  disableSensor(): Observable<SensorControlResponse> {
+    return this.http.post<SensorControlResponse>(
+      API_ENDPOINTS.control.disableSensor('max30105'),
+      { enabled: false }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Enable the MAX30105 heart rate sensor
+   * Sends POST request to /api/control/sensor/max30105 with {enabled: true}
+   */
+  enableSensor(): Observable<SensorControlResponse> {
+    return this.http.post<SensorControlResponse>(
+      API_ENDPOINTS.control.enableSensor('max30105'),
+      { enabled: true }
+    ).pipe(
       catchError(this.handleError)
     );
   }

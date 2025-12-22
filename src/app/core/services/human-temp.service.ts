@@ -19,6 +19,13 @@ export interface HumanTempApiResponse {
   count?: number;
 }
 
+export interface SensorControlResponse {
+  success: boolean;
+  message?: string;
+  sensor?: string;
+  enabled?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -57,6 +64,32 @@ export class HumanTempService {
   getAll(limit: number = 50): Observable<HumanTempApiResponse> {
     const url = `${API_ENDPOINTS.humanTemp.getAll}?limit=${limit}`;
     return this.http.get<HumanTempApiResponse>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Disable the MLX90614 human temperature sensor
+   * Sends POST request to /api/control/sensor/mlx90614 with {enabled: false}
+   */
+  disableSensor(): Observable<SensorControlResponse> {
+    return this.http.post<SensorControlResponse>(
+      API_ENDPOINTS.control.disableSensor('mlx90614'),
+      { enabled: false }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Enable the MLX90614 human temperature sensor
+   * Sends POST request to /api/control/sensor/mlx90614 with {enabled: true}
+   */
+  enableSensor(): Observable<SensorControlResponse> {
+    return this.http.post<SensorControlResponse>(
+      API_ENDPOINTS.control.enableSensor('mlx90614'),
+      { enabled: true }
+    ).pipe(
       catchError(this.handleError)
     );
   }

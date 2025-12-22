@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 import { API_ENDPOINTS } from '../constant/api-endpoints';
+
 export interface GasReading {
   id: number;
   rawValue: number;
@@ -18,6 +19,13 @@ export interface GasApiResponse {
   count?: number;
 }
 
+export interface SensorControlResponse {
+  success: boolean;
+  message?: string;
+  sensor?: string;
+  enabled?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -28,7 +36,12 @@ export class GasDetectionService {
   /**
    * Send new gas reading from ESP32 to backend
    */
-  sendReading(data: { rawValue: number; quality: string; ppm?: number; deviceId?: string }): Observable<GasApiResponse> {
+  sendReading(data: {
+    rawValue: number;
+    quality: string;
+    ppm?: number;
+    deviceId?: string
+  }): Observable<GasApiResponse> {
     return this.http.post<GasApiResponse>(API_ENDPOINTS.gas.create, data).pipe(
       catchError(this.handleError)
     );
@@ -49,6 +62,32 @@ export class GasDetectionService {
   getAll(limit: number = 50): Observable<GasApiResponse> {
     const url = `${API_ENDPOINTS.gas.getAll}?limit=${limit}`;
     return this.http.get<GasApiResponse>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Disable the MQ135 gas sensor
+   * Sends POST request to /api/control/sensor/mq135 with {enabled: false}
+   */
+  disableSensor(): Observable<SensorControlResponse> {
+    return this.http.post<SensorControlResponse>(
+      API_ENDPOINTS.control.disableSensor('mq135'),
+      { enabled: false }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Enable the MQ135 gas sensor
+   * Sends POST request to /api/control/sensor/mq135 with {enabled: true}
+   */
+  enableSensor(): Observable<SensorControlResponse> {
+    return this.http.post<SensorControlResponse>(
+      API_ENDPOINTS.control.enableSensor('mq135'),
+      { enabled: true }
+    ).pipe(
       catchError(this.handleError)
     );
   }

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { HumanTempService, HumanTempReading } from '../../core/services/human-temp.service';
 import { interval, Subscription, switchMap } from 'rxjs';
 
@@ -16,10 +16,14 @@ export class BodyTempComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   lastUpdated: string = '';
+  isDisabling = false;
 
   private pollSubscription!: Subscription;
 
-  constructor(private humanTempService: HumanTempService) {}
+  constructor(
+    private humanTempService: HumanTempService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     // Poll every 8 seconds
@@ -63,6 +67,27 @@ export class BodyTempComponent implements OnInit, OnDestroy {
       error: () => {
         this.error = 'MLX90614 sensor offline';
         this.loading = false;
+      }
+    });
+  }
+
+  /**
+   * Handle back button click - disable MLX90614 sensor and navigate home
+   */
+  onBackClick(): void {
+    this.isDisabling = true;
+
+    this.humanTempService.disableSensor().subscribe({
+      next: (response) => {
+        console.log('MLX90614 sensor disabled successfully:', response);
+        this.isDisabling = false;
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        console.error('Failed to disable MLX90614 sensor:', err);
+        this.isDisabling = false;
+        // Navigate home anyway even if disable fails
+        this.router.navigate(['/']);
       }
     });
   }

@@ -1,9 +1,14 @@
 <div class="heart-page">
-  <!-- Back Button -->
-  <button class="back-btn" routerLink="/">
+  <!-- Back Button with Disable Logic -->
+  <button
+    class="back-btn"
+    (click)="onBackClick()"
+    [disabled]="isDisabling"
+    [class.disabling]="isDisabling">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M19 12H5M12 19l-7-7 7-7"/>
     </svg>
+    <span *ngIf="isDisabling" class="disabling-text">Disabling...</span>
   </button>
 
   <!-- Header -->

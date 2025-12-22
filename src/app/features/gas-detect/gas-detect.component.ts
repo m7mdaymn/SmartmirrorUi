@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { GasDetectionService, GasReading } from '../../core/services/gas-detection.service';
 import { interval, Subscription, switchMap } from 'rxjs';
 
@@ -16,10 +16,14 @@ export class GasDetectComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   lastUpdated: string = '';
+  isDisabling = false;
 
   private pollSubscription!: Subscription;
 
-  constructor(private gasService: GasDetectionService) {}
+  constructor(
+    private gasService: GasDetectionService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.pollSubscription = interval(8000)
@@ -62,6 +66,27 @@ export class GasDetectComponent implements OnInit, OnDestroy {
       error: () => {
         this.error = 'Sensor offline';
         this.loading = false;
+      }
+    });
+  }
+
+  /**
+   * Handle back button click - disable MQ135 sensor and navigate home
+   */
+  onBackClick(): void {
+    this.isDisabling = true;
+
+    this.gasService.disableSensor().subscribe({
+      next: (response) => {
+        console.log('MQ135 sensor disabled successfully:', response);
+        this.isDisabling = false;
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        console.error('Failed to disable MQ135 sensor:', err);
+        this.isDisabling = false;
+        // Navigate home anyway even if disable fails
+        this.router.navigate(['/']);
       }
     });
   }

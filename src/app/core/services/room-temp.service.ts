@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 import { API_ENDPOINTS } from '../constant/api-endpoints';
+
 export interface RoomTempReading {
   id: number;
   temperature: number;     // Room temperature
@@ -16,6 +17,13 @@ export interface RoomTempApiResponse {
   message?: string;
   data?: RoomTempReading | RoomTempReading[];
   count?: number;
+}
+
+export interface SensorControlResponse {
+  success: boolean;
+  message?: string;
+  sensor?: string;
+  enabled?: boolean;
 }
 
 @Injectable({
@@ -56,6 +64,32 @@ export class RoomTempService {
   getAll(limit: number = 50): Observable<RoomTempApiResponse> {
     const url = `${API_ENDPOINTS.roomTemp.getAll}?limit=${limit}`;
     return this.http.get<RoomTempApiResponse>(url).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Disable the DHT22 sensor
+   * Sends POST request to /api/control/sensor/dht22 with {enabled: false}
+   */
+  disableSensor(): Observable<SensorControlResponse> {
+    return this.http.post<SensorControlResponse>(
+      API_ENDPOINTS.control.disableSensor('dht22'),
+      { enabled: false }
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Enable the DHT22 sensor
+   * Sends POST request to /api/control/sensor/dht22 with {enabled: true}
+   */
+  enableSensor(): Observable<SensorControlResponse> {
+    return this.http.post<SensorControlResponse>(
+      API_ENDPOINTS.control.enableSensor('dht22'),
+      { enabled: true }
+    ).pipe(
       catchError(this.handleError)
     );
   }

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { RoomTempService, RoomTempReading } from '../../core/services/room-temp.service';
 import { interval, Subscription, switchMap } from 'rxjs';
 
@@ -16,10 +16,14 @@ export class RoomTempComponent implements OnInit, OnDestroy {
   loading = true;
   error: string | null = null;
   lastUpdated: string = '';
+  isDisabling = false;
 
   private pollSubscription!: Subscription;
 
-  constructor(private roomTempService: RoomTempService) {}
+  constructor(
+    private roomTempService: RoomTempService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     // Poll every 8 seconds (ESP32 sends data every 10s)
@@ -69,6 +73,27 @@ export class RoomTempComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.error = 'Sensor offline or not enabled';
         this.loading = false;
+      }
+    });
+  }
+
+  /**
+   * Handle back button click - disable DHT22 sensor and navigate home
+   */
+  onBackClick(): void {
+    this.isDisabling = true;
+
+    this.roomTempService.disableSensor().subscribe({
+      next: (response) => {
+        console.log('DHT22 sensor disabled successfully:', response);
+        this.isDisabling = false;
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        console.error('Failed to disable DHT22 sensor:', err);
+        this.isDisabling = false;
+        // Navigate home anyway even if disable fails
+        this.router.navigate(['/']);
       }
     });
   }
