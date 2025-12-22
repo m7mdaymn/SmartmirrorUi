@@ -1,23 +1,27 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable, catchError, throwError, tap } from 'rxjs';
 import { API_ENDPOINTS } from '../constant/api-endpoints';
 
-export interface SkincareReading {
-  id: number;
-  skinTemp: number;          // Skin temperature (from MLX90614 object temp)
-  ambientTemp: number;       // Ambient temperature
-  humidity: number;          // Room humidity (%)
-  recommendation?: string | null;  // Optional skincare recommendation
-  timestamp: string;
-  deviceId: string;
-}
-
-export interface SkincareApiResponse {
+// Backend response interface matching your controller
+export interface SkincareAnalysisResponse {
   success: boolean;
   message?: string;
-  data?: SkincareReading | SkincareReading[];
-  count?: number;
+  disclaimer?: string;
+  data?: {
+    skinType: string;
+    condition: string;
+    morningRoutine: string[];
+    nightRoutine: string[];
+    recommendedIngredients: string[];
+    avoidIngredients: string[];
+    lifestyleTips: string[];
+  };
+  aiMessage?: string;
+  detectedSkin?: {
+    skinType: string;
+    condition: string;
+  };
 }
 
 @Injectable({
@@ -28,37 +32,31 @@ export class SkincareService {
   constructor(private http: HttpClient) { }
 
   /**
-   * Send new skincare data (combined from sensors)
-   * Required: skinTemp, ambientTemp, humidity
-   * Optional: recommendation, deviceId
+   * Trigger AI skin analysis
+   * Calls backend which then calls Python AI service
+   * Returns skincare recommendations
    */
-  sendReading(data: {
-    skinTemp: number;
-    ambientTemp: number;
-    humidity: number;
-    recommendation?: string;
-    deviceId?: string;
-  }): Observable<SkincareApiResponse> {
-    return this.http.post<SkincareApiResponse>(API_ENDPOINTS.skincare.create, data).pipe(
+  analyzeSkin(): Observable<SkincareAnalysisResponse> {
+    console.log('🔬 Calling skincare AI analysis...');
+    
+    return this.http.post<SkincareAnalysisResponse>(
+      API_ENDPOINTS.skincare.analyze, 
+      {} // Empty body - backend handles camera
+    ).pipe(
+      tap(response => {
+        console.log('✅ AI Analysis Response:', response);
+      }),
       catchError(this.handleError)
     );
   }
 
   /**
-   * Get the latest skincare reading with recommendation
+   * Check if skincare API is running
    */
-  getLatest(): Observable<SkincareApiResponse> {
-    return this.http.get<SkincareApiResponse>(API_ENDPOINTS.skincare.latest).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  /**
-   * Get recent skincare readings (with optional limit)
-   */
-  getAll(limit: number = 50): Observable<SkincareApiResponse> {
-    const url = `${API_ENDPOINTS.skincare.getAll}?limit=${limit}`;
-    return this.http.get<SkincareApiResponse>(url).pipe(
+  checkStatus(): Observable<{ success: boolean; message: string }> {
+    return this.http.get<{ success: boolean; message: string }>(
+      API_ENDPOINTS.skincare.status
+    ).pipe(
       catchError(this.handleError)
     );
   }
@@ -68,16 +66,31 @@ export class SkincareService {
    */
   private handleError(error: any): Observable<never> {
     let errorMessage = 'An unknown error occurred';
+    let userMessage = errorMessage;
 
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = error.error.message;
+      userMessage = 'Network error. Please check your connection.';
+    } else if (error.status === 0) {
+      errorMessage = 'Cannot connect to server';
+      userMessage = 'Cannot connect to server. Make sure the backend is running on port 5000.';
+    } else if (error.status === 400) {
+      userMessage = error.error?.message || 'No face detected. Please face the mirror clearly.';
+    } else if (error.status === 404) {
+      userMessage = error.error?.message || 'No skincare routine found for your skin type.';
+    } else if (error.status === 500) {
+      userMessage = error.error?.message || 'AI Service error. Make sure Python server is running on port 8000.';
     } else {
-      // Server-side error
-      errorMessage = error.error?.message || error.message || `Server Error: ${error.status}`;
+      userMessage = error.error?.message || `Server Error: ${error.status}`;
     }
 
-    console.error('SkincareService Error:', errorMessage, error);
-    return throwError(() => new Error(errorMessage));
+    console.error('❌ SkincareService Error:', {
+      status: error.status,
+      message: errorMessage,
+      fullError: error
+    });
+
+    return throwError(() => new Error(userMessage));
   }
 }

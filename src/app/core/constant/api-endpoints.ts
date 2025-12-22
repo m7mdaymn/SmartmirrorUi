@@ -1,6 +1,5 @@
 import { environment } from "../../../environment/environment";
 
-environment
 const API = environment.apiBaseUrl;
 
 export const API_ENDPOINTS = {
@@ -32,11 +31,10 @@ export const API_ENDPOINTS = {
     latest: `${API}/heart/latest`
   },
 
-  // Skincare (combined or processed data)
+  // Skincare AI Analysis
   skincare: {
-    create: `${API}/skincare`,
-    getAll: `${API}/skincare`,
-    latest: `${API}/skincare/latest`
+    analyze: `${API}/skincare/analyze`,  // NEW: AI analysis endpoint
+    status: `${API}/skincare/status`
   },
 
   // Sensor Control

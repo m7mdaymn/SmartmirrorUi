@@ -29,50 +29,62 @@
     </div>
   </div>
 
+  <!-- Error Message -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span>{{ errorMessage }}</span>
+  </div>
+
   <!-- Main Content -->
   <div class="content-container">
     <!-- Left: Camera & Face Display -->
     <div class="face-display-section">
-      <div class="camera-preview" (click)="captureFace()">
+      <div class="camera-preview">
         <div class="camera-frame" [class.active]="isScanning">
-          <div class="face-overlay" *ngIf="faceDetected">
-            <div class="face-outline"></div>
-            <div class="landmark-point" 
-                 *ngFor="let point of faceLandmarks"
-                 [style.left]="point.x + '%'"
-                 [style.top]="point.y + '%'"></div>
-          </div>
           
+          <!-- Scanning Animation -->
           <div class="scan-line" *ngIf="isScanning"></div>
           
-          <div class="camera-placeholder" *ngIf="!faceDetected">
+          <!-- Idle State: Before Analysis -->
+          <div class="camera-placeholder" *ngIf="analysisStatus === 'idle'">
             <div class="camera-icon">📷</div>
-            <p>Click to capture face image</p>
+            <p>Click "Start AI Analysis" to begin</p>
+            <p class="small-text">Python AI will capture and analyze your face</p>
           </div>
           
-          <img *ngIf="capturedImage" [src]="capturedImage" class="captured-image">
+          <!-- Scanning State: During Analysis -->
+          <div class="scanning-indicator" *ngIf="isScanning">
+            <div class="spinner"></div>
+            <p>🤖 AI analyzing your skin...</p>
+            <p class="small-text">Processing with MediaPipe & OpenCV</p>
+          </div>
+          
+          <!-- Complete State: Show Result Image -->
+          <img *ngIf="capturedImage && analysisStatus === 'complete'" 
+               [src]="capturedImage" 
+               class="captured-image"
+               alt="Analysis Result">
         </div>
       </div>
 
       <div class="camera-controls">
-        <button class="control-btn primary" (click)="startScan()" [disabled]="isScanning">
+        <button class="control-btn primary" 
+                (click)="startScan()" 
+                [disabled]="isScanning">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
-          {{ isScanning ? 'Scanning...' : 'Start Scan' }}
+          {{ isScanning ? 'AI Analyzing...' : 'Start AI Analysis' }}
         </button>
         
-        <button class="control-btn" (click)="captureFace()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-          Capture Image
-        </button>
-        
-        <button class="control-btn" (click)="resetScan()">
+        <button class="control-btn" 
+                (click)="resetScan()" 
+                [disabled]="isScanning">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
             <path d="M3 3v5h5"/>
@@ -84,89 +96,71 @@
 
     <!-- Right: Analysis Results -->
     <div class="analysis-results">
-      <!-- Basic Info -->
-      <div class="basic-info">
-        <div class="info-item">
-          <div class="info-label">Gender</div>
-          <div class="info-value">{{ gender }}</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">Age</div>
-          <div class="info-value">{{ estimatedAge }}</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">Skin Tone</div>
-          <div class="info-value">{{ skinTone }}</div>
-        </div>
-        <div class="info-item">
-          <div class="info-label">Confidence</div>
-          <div class="info-value">{{ confidence }}%</div>
-        </div>
+      
+      <!-- Placeholder: Before Analysis -->
+      <div class="placeholder-info" *ngIf="analysisStatus === 'idle' || analysisStatus === 'scanning'">
+        <div class="placeholder-icon">🔬</div>
+        <p>{{ analysisStatus === 'scanning' ? 'Analyzing your skin...' : 'Ready to analyze' }}</p>
+        <p class="small-text">
+          {{ analysisStatus === 'scanning' 
+             ? 'Backend calling Python AI service...' 
+             : 'Click "Start AI Analysis" to get personalized skincare recommendations' }}
+        </p>
       </div>
 
-      <!-- Skin Condition Analysis -->
-      <div class="skin-analysis">
-        <h3>🧬 Skin Conditions Detected</h3>
-        <div class="conditions-grid">
-          <div class="condition-item" *ngFor="let condition of skinConditions" 
-               [class]="condition.severity">
-            <div class="condition-name">{{ condition.name }}</div>
-            <div class="condition-severity">
-              <div class="severity-bar">
-                <div class="severity-fill" [style.width]="condition.level + '%'"></div>
+      <!-- Results: After Successful Analysis -->
+      <div *ngIf="analysisStatus === 'complete'">
+        
+        <!-- Basic Info: ONLY IF DATA EXISTS -->
+        <div class="basic-info" *ngIf="skinType || condition">
+          <div class="info-item" *ngIf="skinType">
+            <div class="info-label">Skin Type</div>
+            <div class="info-value">{{ skinType }}</div>
+          </div>
+          <div class="info-item" *ngIf="condition">
+            <div class="info-label">Condition</div>
+            <div class="info-value">{{ condition }}</div>
+          </div>
+          <div class="info-item" *ngIf="confidence > 0">
+            <div class="info-label">AI Confidence</div>
+            <div class="info-value">{{ confidence }}%</div>
+          </div>
+        </div>
+
+        <!-- Recommendations Cards: ONLY IF EXISTS -->
+        <div class="recommendations-cards" *ngIf="recommendations.length > 0">
+          <h3>✨ Key Recommendations</h3>
+          <div class="cards-grid">
+            <div class="rec-card" *ngFor="let rec of recommendations">
+              <div class="rec-icon">{{ rec.icon }}</div>
+              <div class="rec-content">
+                <h4>{{ rec.title }}</h4>
+                <p>{{ rec.description }}</p>
+                <span class="priority-badge" [class]="rec.priority">
+                  {{ rec.priority === 'high' ? 'High Priority' : 'Medium Priority' }}
+                </span>
               </div>
-              <span class="severity-text">{{ getSeverityText(condition.level) }}</span>
             </div>
-            <div class="condition-level">{{ condition.level }}%</div>
           </div>
         </div>
-      </div>
 
-      <!-- Health Score -->
-      <div class="health-score">
-        <div class="score-circle">
-          <div class="score-value">{{ skinHealthScore }}</div>
-          <div class="score-label">Skin Health</div>
-        </div>
-        <div class="score-details">
-          <div class="score-item">
-            <span class="score-label">Hydration</span>
-            <span class="score-value">{{ hydrationScore }}/100</span>
-          </div>
-          <div class="score-item">
-            <span class="score-label">Evenness</span>
-            <span class="score-value">{{ evennessScore }}/100</span>
-          </div>
-          <div class="score-item">
-            <span class="score-label">Texture</span>
-            <span class="score-value">{{ textureScore }}/100</span>
+        <!-- Ingredients to Avoid: ONLY IF EXISTS -->
+        <div class="avoid-section" *ngIf="avoidIngredients.length > 0">
+          <h3>⚠️ Ingredients to Avoid</h3>
+          <div class="ingredient-tags">
+            <span class="tag avoid" *ngFor="let ingredient of avoidIngredients">
+              {{ ingredient }}
+            </span>
           </div>
         </div>
+
       </div>
     </div>
   </div>
 
-  <!-- Recommendations -->
-  <div class="recommendations-section">
-    <h2>✨ Personalized Recommendations</h2>
-    <div class="recommendations-grid">
-      <div class="recommendation-card" *ngFor="let rec of recommendations">
-        <div class="rec-icon">{{ rec.icon }}</div>
-        <div class="rec-content">
-          <h4>{{ rec.title }}</h4>
-          <p>{{ rec.description }}</p>
-          <div class="rec-priority" [class]="rec.priority">
-            {{ rec.priority === 'high' ? 'High Priority' : 
-               rec.priority === 'medium' ? 'Medium Priority' : 'Low Priority' }}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Daily Routine -->
-  <div class="routine-section">
-    <h2>📅 Suggested Daily Routine</h2>
+  <!-- Daily Routine Section: ONLY IF DATA EXISTS -->
+  <div class="routine-section" *ngIf="analysisStatus === 'complete' && dailyRoutine.length > 0">
+    <h2>📅 Your Personalized Daily Routine</h2>
     <div class="routine-timeline">
       <div class="routine-step" *ngFor="let step of dailyRoutine">
         <div class="step-time">{{ step.time }}</div>
@@ -180,4 +174,22 @@
       </div>
     </div>
   </div>
+
+  <!-- Lifestyle Tips Section: ONLY IF DATA EXISTS -->
+  <div class="tips-section" *ngIf="analysisStatus === 'complete' && lifestyleTips.length > 0">
+    <h2>💡 Lifestyle Tips for {{ skinType }} Skin</h2>
+    <ul class="tips-list">
+      <li *ngFor="let tip of lifestyleTips">{{ tip }}</li>
+    </ul>
+  </div>
+
+  <!-- No Data Warning -->
+  <div class="no-data-warning" *ngIf="analysisStatus === 'complete' && recommendations.length === 0 && dailyRoutine.length === 0">
+    <div class="warning-icon">⚠️</div>
+    <h3>No Recommendations Found</h3>
+    <p>The AI detected <strong>{{ skinType }}</strong> skin with <strong>{{ condition }}</strong>,<br>
+       but no skincare routine data exists in the database for this combination.</p>
+    <p class="small-text">Please add skincare data to MongoDB for this skin type.</p>
+  </div>
+
 </div>

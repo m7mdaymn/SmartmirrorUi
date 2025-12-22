@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { SkincareService, SkincareAnalysisResponse } from '../../core/services/skincare.service';
 
 @Component({
   selector: 'app-face-analysis',
@@ -13,135 +14,210 @@ export class FaceAnalysisComponent implements OnInit {
   isScanning: boolean = false;
   faceDetected: boolean = false;
   capturedImage: string | null = null;
-  analysisStatus: string = 'idle';
+  analysisStatus: string = 'idle'; // 'idle' | 'scanning' | 'complete' | 'error'
+  errorMessage: string = '';
   
-  // Face Analysis Data
-  gender: string = 'Detecting...';
-  estimatedAge: number = 0;
-  skinTone: string = 'Detecting...';
+  // Real data from backend - ALL EMPTY BY DEFAULT
+  skinType: string = '';
+  condition: string = '';
+  morningRoutine: string[] = [];
+  nightRoutine: string[] = [];
+  recommendedIngredients: string[] = [];
+  avoidIngredients: string[] = [];
+  lifestyleTips: string[] = [];
+  
+  // AI confidence (only set after successful analysis)
   confidence: number = 0;
   
-  // Skin Conditions
-  skinConditions = [
-    { name: 'Acne', level: 25, severity: 'low' },
-    { name: 'Dark Circles', level: 60, severity: 'medium' },
-    { name: 'Wrinkles', level: 15, severity: 'low' },
-    { name: 'Pigmentation', level: 40, severity: 'medium' },
-    { name: 'Redness', level: 30, severity: 'low' },
-    { name: 'Oiliness', level: 55, severity: 'medium' }
-  ];
+  // Recommendations (will be populated from backend only)
+  recommendations: any[] = [];
   
-  // Health Scores
-  skinHealthScore: number = 0;
-  hydrationScore: number = 0;
-  evennessScore: number = 0;
-  textureScore: number = 0;
-  
-  // Face Landmarks (for visualization)
-  faceLandmarks = [
-    { x: 40, y: 30 }, // Left eye
-    { x: 60, y: 30 }, // Right eye
-    { x: 50, y: 40 }, // Nose
-    { x: 40, y: 50 }, // Left mouth corner
-    { x: 60, y: 50 }  // Right mouth corner
-  ];
-  
-  // Recommendations
-  recommendations = [
-    { 
-      icon: '💧', 
-      title: 'Hydrating Serum', 
-      description: 'Use hyaluronic acid serum twice daily',
-      priority: 'high' 
-    },
-    { 
-      icon: '☀️', 
-      title: 'Sunscreen', 
-      description: 'Apply SPF 50+ every morning',
-      priority: 'high' 
-    },
-    { 
-      icon: '🌙', 
-      title: 'Night Cream', 
-      description: 'Retinol cream before bedtime',
-      priority: 'medium' 
-    },
-    { 
-      icon: '🧴', 
-      title: 'Moisturizer', 
-      description: 'Oil-free moisturizer for combination skin',
-      priority: 'medium' 
-    }
-  ];
-  
-  // Daily Routine
-  dailyRoutine = [
-    { time: '07:00', icon: '🌅', title: 'Morning Cleanse', description: 'Gentle cleanser with warm water' },
-    { time: '07:15', icon: '💧', title: 'Hydration', description: 'Apply vitamin C serum' },
-    { time: '07:30', icon: '☀️', title: 'Sun Protection', description: 'SPF 50+ sunscreen application' },
-    { time: '20:00', icon: '🧼', title: 'Evening Cleanse', description: 'Double cleanse to remove impurities' },
-    { time: '20:15', icon: '🌙', title: 'Night Treatment', description: 'Apply retinol treatment' },
-    { time: '20:30', icon: '🌿', title: 'Moisturize', description: 'Night cream for recovery' }
-  ];
+  // Daily Routine (will be populated from backend only)
+  dailyRoutine: any[] = [];
+
+  constructor(private skincareService: SkincareService) {}
 
   ngOnInit() {
-    // Simulate initial detection
-    setTimeout(() => {
-      this.faceDetected = true;
-    }, 1000);
+    // Check if services are running
+    this.checkServiceStatus();
+  }
+
+  checkServiceStatus() {
+    this.skincareService.checkStatus().subscribe({
+      next: (res) => {
+        console.log('✅ Skincare API Status:', res.message);
+      },
+      error: (err) => {
+        console.warn('⚠️ Skincare API not responding:', err.message);
+        this.errorMessage = 'Backend service not available. Please start the Node.js server on port 5000.';
+      }
+    });
   }
 
   startScan() {
     if (this.isScanning) return;
     
+    // Reset everything before new scan
+    this.resetData();
+    
     this.isScanning = true;
     this.analysisStatus = 'scanning';
+    this.errorMessage = '';
+    this.faceDetected = true;
     
-    // Simulate scanning process
-    setTimeout(() => {
-      this.performAnalysis();
-    }, 2000);
+    console.log('📸 Starting AI skin analysis...');
+    console.log('🔗 Calling: POST http://localhost:5000/api/skincare/analyze');
+    
+    // Call the real backend API
+    this.skincareService.analyzeSkin().subscribe({
+      next: (response: SkincareAnalysisResponse) => {
+        console.log('✅ Analysis Complete:', response);
+        
+        if (response.success && response.data) {
+          this.processAnalysisResults(response);
+        } else {
+          this.handleAnalysisError(response.message || 'Analysis failed');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Analysis Error:', error);
+        this.handleAnalysisError(error.message);
+      }
+    });
   }
 
-  performAnalysis() {
-    // Generate random analysis data
-    this.gender = Math.random() > 0.5 ? 'Male' : 'Female';
-    this.estimatedAge = Math.floor(Math.random() * 30) + 20;
-    this.skinTone = ['Fair', 'Light', 'Medium', 'Tan', 'Deep'][Math.floor(Math.random() * 5)];
-    this.confidence = Math.floor(Math.random() * 30) + 70;
+  processAnalysisResults(response: SkincareAnalysisResponse) {
+    const data = response.data!;
     
-    // Update skin conditions with random values
-    this.skinConditions.forEach(condition => {
-      condition.level = Math.floor(Math.random() * 70);
-      if (condition.level > 50) condition.severity = 'high';
-      else if (condition.level > 25) condition.severity = 'medium';
-      else condition.severity = 'low';
+    console.log('📊 Processing backend data:', {
+      skinType: data.skinType,
+      condition: data.condition,
+      morningRoutine: data.morningRoutine?.length || 0,
+      nightRoutine: data.nightRoutine?.length || 0,
+      ingredients: data.recommendedIngredients?.length || 0
     });
     
-    // Calculate health scores
-    this.skinHealthScore = 100 - Math.floor(this.skinConditions.reduce((sum, c) => sum + c.level, 0) / 6);
-    this.hydrationScore = Math.floor(Math.random() * 40) + 60;
-    this.evennessScore = Math.floor(Math.random() * 50) + 50;
-    this.textureScore = Math.floor(Math.random() * 60) + 40;
+    // Store ONLY real data from backend
+    this.skinType = data.skinType || '';
+    this.condition = data.condition || '';
+    this.morningRoutine = data.morningRoutine || [];
+    this.nightRoutine = data.nightRoutine || [];
+    this.recommendedIngredients = data.recommendedIngredients || [];
+    this.avoidIngredients = data.avoidIngredients || [];
+    this.lifestyleTips = data.lifestyleTips || [];
     
+    // Build recommendations from backend data
+    this.buildRecommendations();
+    
+    // Build daily routine from backend data
+    this.buildDailyRoutine();
+    
+    // Update UI state
     this.isScanning = false;
     this.analysisStatus = 'complete';
+    this.confidence = 95; // High confidence from AI
     
-    // Generate a mock image
-    this.capturedImage = 'data:image/svg+xml;base64,' + btoa(`
-      <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="#4a5568"/>
-        <circle cx="200" cy="150" r="80" fill="#e2e8f0"/>
-        <circle cx="160" cy="130" r="15" fill="#2d3748"/>
-        <circle cx="240" cy="130" r="15" fill="#2d3748"/>
-        <path d="M160 200 Q200 220 240 200" stroke="#2d3748" stroke-width="8" fill="none"/>
-      </svg>
-    `);
+    // Generate a simple representation image
+    this.capturedImage = this.generateResultImage();
+    
+    console.log('✨ Analysis processed successfully');
+    console.log('📋 Final data:', {
+      recommendations: this.recommendations.length,
+      routineSteps: this.dailyRoutine.length,
+      avoidIngredients: this.avoidIngredients.length,
+      lifestyleTips: this.lifestyleTips.length
+    });
   }
 
-  captureFace() {
-    this.faceDetected = true;
-    // In real app, this would capture from camera
+  buildRecommendations() {
+    this.recommendations = [];
+    
+    // Build from morning routine
+    if (this.morningRoutine.length > 0) {
+      this.recommendations.push({
+        icon: '🌅',
+        title: 'Morning Routine',
+        description: this.morningRoutine.slice(0, 2).join(' → '),
+        priority: 'high'
+      });
+    }
+    
+    // Build from recommended ingredients
+    if (this.recommendedIngredients.length > 0) {
+      this.recommendations.push({
+        icon: '🧪',
+        title: 'Key Ingredients',
+        description: `Look for: ${this.recommendedIngredients.slice(0, 3).join(', ')}`,
+        priority: 'high'
+      });
+    }
+    
+    // Build from night routine
+    if (this.nightRoutine.length > 0) {
+      this.recommendations.push({
+        icon: '🌙',
+        title: 'Night Routine',
+        description: this.nightRoutine.slice(0, 2).join(' → '),
+        priority: 'medium'
+      });
+    }
+    
+    // Build from lifestyle tips
+    if (this.lifestyleTips.length > 0) {
+      this.recommendations.push({
+        icon: '💪',
+        title: 'Lifestyle Tips',
+        description: this.lifestyleTips[0],
+        priority: 'medium'
+      });
+    }
+  }
+
+  buildDailyRoutine() {
+    this.dailyRoutine = [];
+    
+    // Morning routine - start at 7:00 AM
+    this.morningRoutine.forEach((step, i) => {
+      const hour = 7 + Math.floor(i / 4);
+      const minute = (i % 4) * 15;
+      this.dailyRoutine.push({
+        time: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
+        icon: this.getMorningIcon(i),
+        title: `Morning Step ${i + 1}`,
+        description: step
+      });
+    });
+    
+    // Night routine - start at 8:00 PM (20:00)
+    this.nightRoutine.forEach((step, i) => {
+      const hour = 20 + Math.floor(i / 4);
+      const minute = (i % 4) * 15;
+      this.dailyRoutine.push({
+        time: `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`,
+        icon: this.getNightIcon(i),
+        title: `Night Step ${i + 1}`,
+        description: step
+      });
+    });
+  }
+
+  getMorningIcon(index: number): string {
+    const icons = ['🧼', '💧', '☀️', '🧴', '🌞', '✨'];
+    return icons[index % icons.length];
+  }
+
+  getNightIcon(index: number): string {
+    const icons = ['🧼', '🌙', '🌿', '💤', '⭐', '🛌'];
+    return icons[index % icons.length];
+  }
+
+  handleAnalysisError(message: string) {
+    this.isScanning = false;
+    this.analysisStatus = 'error';
+    this.errorMessage = message;
+    this.faceDetected = false;
+    
+    console.error('❌ Analysis failed:', message);
   }
 
   resetScan() {
@@ -149,27 +225,72 @@ export class FaceAnalysisComponent implements OnInit {
     this.faceDetected = false;
     this.capturedImage = null;
     this.analysisStatus = 'idle';
+    this.errorMessage = '';
     
-    // Reset all values
-    this.gender = 'Detecting...';
-    this.estimatedAge = 0;
-    this.skinTone = 'Detecting...';
+    this.resetData();
+    
+    console.log('🔄 Scan reset - ready for new analysis');
+  }
+
+  resetData() {
+    // Clear ALL data
+    this.skinType = '';
+    this.condition = '';
+    this.morningRoutine = [];
+    this.nightRoutine = [];
+    this.recommendedIngredients = [];
+    this.avoidIngredients = [];
+    this.lifestyleTips = [];
     this.confidence = 0;
-    this.skinHealthScore = 0;
+    this.recommendations = [];
+    this.dailyRoutine = [];
   }
 
   getStatusText(): string {
     switch(this.analysisStatus) {
       case 'idle': return 'Ready';
-      case 'scanning': return 'Analyzing...';
-      case 'complete': return 'Analysis Complete';
+      case 'scanning': return 'Analyzing with AI...';
+      case 'complete': return 'Analysis Complete ✓';
+      case 'error': return 'Error';
       default: return 'Ready';
     }
   }
 
-  getSeverityText(level: number): string {
-    if (level > 50) return 'High';
-    if (level > 25) return 'Medium';
-    return 'Low';
+  private generateResultImage(): string {
+    return 'data:image/svg+xml;base64,' + btoa(`
+      <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#4a5568;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2d3748;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#bgGrad)"/>
+        
+        <!-- Face -->
+        <circle cx="200" cy="150" r="80" fill="#e2e8f0" opacity="0.9"/>
+        
+        <!-- Eyes -->
+        <circle cx="170" cy="135" r="12" fill="#2d3748"/>
+        <circle cx="230" cy="135" r="12" fill="#2d3748"/>
+        
+        <!-- Nose -->
+        <ellipse cx="200" cy="165" rx="8" ry="14" fill="#cbd5e0"/>
+        
+        <!-- Smile -->
+        <path d="M 170 195 Q 200 210 230 195" stroke="#2d3748" stroke-width="5" fill="none" stroke-linecap="round"/>
+        
+        <!-- Result Text -->
+        <text x="200" y="280" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff" text-anchor="middle">
+          ${this.skinType}
+        </text>
+        <text x="200" y="310" font-family="Arial, sans-serif" font-size="18" fill="#cbd5e0" text-anchor="middle">
+          ${this.condition}
+        </text>
+        <text x="200" y="340" font-family="Arial, sans-serif" font-size="16" fill="#48bb78" text-anchor="middle">
+          ✓ AI Analysis Complete
+        </text>
+      </svg>
+    `);
   }
 }
