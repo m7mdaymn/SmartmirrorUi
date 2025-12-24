@@ -1,8 +1,15 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { HumanTempService, HumanTempReading } from '../../core/services/human-temp.service';
-import { interval, Subscription, switchMap } from 'rxjs';
+import { interval, Subscription } from 'rxjs';
+
+// Static mock data interface
+interface HumanTempReading {
+  objectTemp: number;
+  ambientTemp: number;
+  unit: string;
+  timestamp: string;
+}
 
 @Component({
   selector: 'app-body-temp',
@@ -20,76 +27,73 @@ export class BodyTempComponent implements OnInit, OnDestroy {
 
   private pollSubscription!: Subscription;
 
-  constructor(
-    private humanTempService: HumanTempService,
-    private router: Router
-  ) {}
+  // Array of temperature values to cycle through
+  private temperatureValues = [37.1, 37.3, 37.0];
+  private currentTempIndex = 0;
+
+  // Static mock data - you can modify these values
+  private staticData: HumanTempReading = {
+    objectTemp: 37.1,      // Body temperature in Celsius
+    ambientTemp: 24.5,     // Ambient temperature in Celsius
+    unit: 'C',             // Temperature unit
+    timestamp: new Date().toISOString()
+  };
+
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
-    // Poll every 8 seconds
-    this.pollSubscription = interval(8000)
-      .pipe(switchMap(() => this.humanTempService.getLatest()))
-      .subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.latestReading = res.data as HumanTempReading;
-            this.updateLastUpdated();
-            this.loading = false;
-            this.error = null;
-          } else {
-            this.error = 'No temperature data yet';
-            this.loading = false;
-          }
-        },
-        error: () => {
-          this.error = 'Sensor not enabled';
-          this.loading = false;
-        }
-      });
+    // Simulate initial loading
+    setTimeout(() => {
+      this.loadStaticData();
+      this.loading = false;
+    }, 1000);
 
-    this.loadLatest(); // Initial fetch
+    // Simulate periodic updates (optional - simulates small temperature fluctuations)
+    this.pollSubscription = interval(8000).subscribe(() => {
+      this.simulateTemperatureUpdate();
+    });
   }
 
   ngOnDestroy(): void {
     this.pollSubscription?.unsubscribe();
   }
 
-  loadLatest(): void {
-    this.loading = true;
-    this.humanTempService.getLatest().subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.latestReading = res.data as HumanTempReading;
-          this.updateLastUpdated();
-        }
-        this.loading = false;
-      },
-      error: () => {
-        this.error = 'MLX90614 sensor offline';
-        this.loading = false;
-      }
-    });
+  /**
+   * Load static data
+   */
+  loadStaticData(): void {
+    this.latestReading = { ...this.staticData };
+    this.updateLastUpdated();
+    this.error = null;
   }
 
   /**
-   * Handle back button click - disable MLX90614 sensor and navigate home
+   * Cycle through the temperature values
+   */
+  simulateTemperatureUpdate(): void {
+    if (this.latestReading) {
+      // Move to next temperature in the cycle
+      this.currentTempIndex = (this.currentTempIndex + 1) % this.temperatureValues.length;
+
+      // Update to the next temperature value
+      this.latestReading.objectTemp = this.temperatureValues[this.currentTempIndex];
+      this.latestReading.timestamp = new Date().toISOString();
+      this.updateLastUpdated();
+    }
+  }
+
+  /**
+   * Handle back button click - navigate home
    */
   onBackClick(): void {
     this.isDisabling = true;
 
-    this.humanTempService.disableSensor().subscribe({
-      next: (response) => {
-        console.log('MLX90614 sensor disabled successfully:', response);
-        this.isDisabling = false;
-        this.router.navigate(['/']);
-      },
-      error: (err) => {
-        console.error('Failed to disable MLX90614 sensor:', err);
-        this.isDisabling = false;
-        // Navigate home anyway even if disable fails
-        this.router.navigate(['/']);
-      }
-    });
+    // Simulate disable delay
+    setTimeout(() => {
+      console.log('Navigating back to home');
+      this.isDisabling = false;
+      this.router.navigate(['/']);
+    }, 500);
   }
 
   updateLastUpdated(): void {
