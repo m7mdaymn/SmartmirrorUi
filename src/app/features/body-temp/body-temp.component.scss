@@ -13,23 +13,37 @@
 .temp-page {
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, #111929 0%, #536786 100%);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #000000;
+  font-family: 'Arial Black', 'Arial Bold', 'Helvetica Bold', sans-serif;
   color: #ffffff;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: fixed;
   margin: 0;
   padding: 0;
 
-  /* Back Button */
+  /* Rotating border animation */
+  @keyframes rotateBorder {
+    0% {
+      transform: rotate(0deg) scale(1);
+    }
+    50% {
+      transform: rotate(180deg) scale(1.15);
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+    }
+  }
+
+  /* Back Button with Orange animated border */
   .back-btn {
     position: absolute;
     top: 30px;
     left: 30px;
-    width: 50px;
-    height: 50px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 70px;
+    height: 70px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 5px solid transparent;
     border-radius: 50%;
     color: #ffffff;
     cursor: pointer;
@@ -39,11 +53,51 @@
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     z-index: 10;
+    box-shadow: 0 0 30px rgba(255, 165, 0, 0.4);
+    position: relative;
+    overflow: visible;
+    background-clip: padding-box;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      padding: 5px;
+      background: linear-gradient(0deg, rgba(255, 165, 0, 0.3), rgba(255, 165, 0, 1), rgba(255, 165, 0, 1), rgba(255, 165, 0, 0.3));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: rotateBorder 3s linear infinite;
+      pointer-events: none;
+    }
+
+    svg {
+      filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+      stroke-width: 3;
+      width: 28px;
+      height: 28px;
+      position: relative;
+      z-index: 1;
+    }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.25);
-      border-color: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 165, 0, 0.3);
+      box-shadow: 0 0 50px rgba(255, 165, 0, 0.6);
       transform: scale(1.05);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .disabling-text {
+      position: absolute;
+      bottom: -25px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
     }
   }
 
@@ -56,6 +110,7 @@
     text-align: center;
     margin: 20px 80px;
     animation: pulse 2s infinite;
+    border: 3px solid rgba(255, 255, 255, 0.3);
 
     .alert-content {
       display: flex;
@@ -70,11 +125,17 @@
       .alert-text {
         h3 {
           margin: 0;
-          font-size: 24px;
+          font-size: 28px;
+          font-weight: 900;
+          text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+          font-family: 'Arial Black', sans-serif;
         }
         p {
           margin: 5px 0 0;
-          opacity: 0.9;
+          opacity: 1;
+          font-size: 18px;
+          font-weight: 700;
+          text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
         }
       }
     }
@@ -85,7 +146,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 30px 80px 0;
+    margin-top: -100px;
+    padding: 50px 100px;
     margin-bottom: 40px;
 
     .title-section {
@@ -94,68 +156,86 @@
       gap: 20px;
 
       svg {
-        width: 48px;
-        height: 48px;
+        width: 56px;
+        height: 56px;
         color: #ffa500;
-        filter: drop-shadow(0 0 15px rgba(255, 165, 0, 0.5));
+        filter: drop-shadow(0 0 20px rgba(255, 165, 0, 0.8));
+        stroke-width: 2.5;
       }
 
       .title-text {
         h1 {
-          font-size: 36px;
-          font-weight: 300;
+          font-size: 42px;
+          font-weight: 900;
           margin: 0;
-          letter-spacing: 1px;
-          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          letter-spacing: 2px;
+          text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+          font-family: 'Arial Black', sans-serif;
         }
 
         .subtitle {
           font-size: 16px;
-          opacity: 0.8;
-          font-weight: 300;
-          margin-top: 5px;
+          opacity: 1;
+          font-weight: 700;
+          margin-top: 8px;
+          text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+          font-family: 'Arial', sans-serif;
         }
       }
     }
 
     .system-status {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 10px 20px;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 12px 24px;
       border-radius: 30px;
       backdrop-filter: blur(10px);
+      border: 3px solid rgba(255, 255, 255, 0.3);
+
+      span {
+        font-weight: 700;
+        font-size: 15px;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+      }
 
       .status-dot {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
         display: inline-block;
+        margin-right: 8px;
 
         .connecting & {
           background: #f39c12;
           animation: pulse 1.5s infinite;
+          box-shadow: 0 0 15px #f39c12;
         }
 
         .online & {
           background: #2ecc71;
+          box-shadow: 0 0 15px #2ecc71;
         }
 
         .offline & {
           background: #e74c3c;
+          box-shadow: 0 0 15px #e74c3c;
         }
 
         .measuring & {
           background: #ffa500;
           animation: pulse 1.5s infinite;
+          box-shadow: 0 0 15px #ffa500;
         }
       }
 
       small {
-        font-size: 12px;
-        opacity: 0.7;
-        margin-top: 4px;
+        font-size: 13px;
+        opacity: 1;
+        font-weight: 700;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
       }
     }
   }
@@ -165,16 +245,19 @@
   .error-message {
     text-align: center;
     padding: 60px 20px;
-    font-size: 18px;
-    opacity: 0.9;
+    font-size: 20px;
+    opacity: 1;
+    font-weight: 700;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
 
     p {
-      margin: 10px 0;
+      margin: 15px 0;
     }
   }
 
   .error-message {
     color: #ff6b6b;
+    text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
   }
 
   /* Main Temperature Display */
@@ -194,69 +277,72 @@
 
       .thermometer-body {
         position: relative;
-        width: 80px;
-        height: 300px;
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 40px;
-        border: 2px solid rgba(255, 255, 255, 0.2);
+        width: 90px;
+        height: 350px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 45px;
+        border: 4px solid rgba(255, 165, 0, 0.4);
         margin-bottom: 30px;
         overflow: hidden;
+        box-shadow: 0 0 30px rgba(255, 165, 0, 0.3);
 
         .thermometer-bulb {
           position: absolute;
           bottom: 0;
           left: 50%;
           transform: translateX(-50%);
-          width: 120px;
-          height: 120px;
-          background: rgba(255, 165, 0, 0.2);
+          width: 130px;
+          height: 130px;
+          background: rgba(255, 165, 0, 0.3);
           border-radius: 50%;
-          border: 2px solid rgba(255, 165, 0, 0.4);
+          border: 4px solid rgba(255, 165, 0, 0.6);
+          box-shadow: 0 0 40px rgba(255, 165, 0, 0.5);
 
           .mercury {
             position: absolute;
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 30px;
+            width: 35px;
             background: linear-gradient(to top, #ff8c00, #ff5500);
-            border-radius: 15px 15px 0 0;
+            border-radius: 18px 18px 0 0;
             transition: height 1.2s ease;
-            box-shadow: 0 0 20px rgba(255, 140, 0, 0.5);
+            box-shadow: 0 0 30px rgba(255, 140, 0, 0.8);
           }
         }
 
         .thermometer-scale {
           position: absolute;
-          right: -50px;
+          right: -60px;
           top: 0;
-          bottom: 120px;
-          width: 50px;
+          bottom: 130px;
+          width: 60px;
 
           .scale-mark {
             position: absolute;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             width: 100%;
 
             .scale-value {
-              font-size: 13px;
-              opacity: 0.8;
-              min-width: 30px;
+              font-size: 15px;
+              opacity: 1;
+              min-width: 35px;
               text-align: right;
-              font-weight: 500;
+              font-weight: 900;
+              text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
             }
 
             .scale-line {
-              width: 15px;
-              height: 2px;
-              background: rgba(255, 255, 255, 0.4);
+              width: 18px;
+              height: 3px;
+              background: rgba(255, 165, 0, 0.6);
+              box-shadow: 0 0 10px rgba(255, 165, 0, 0.5);
             }
           }
         }
 
-        /* Measuring Text & Loader Inside Thermometer */
         .measuring-text {
           position: absolute;
           top: 50%;
@@ -264,30 +350,34 @@
           transform: translate(-50%, -50%);
           text-align: center;
           color: white;
-          font-size: 14px;
+          font-size: 16px;
           z-index: 10;
           width: 200px;
 
           p {
             margin: 15px 0 8px;
-            font-weight: bold;
-            font-size: 16px;
+            font-weight: 900;
+            font-size: 18px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
           }
 
           small {
-            opacity: 0.8;
-            font-size: 13px;
+            opacity: 1;
+            font-size: 14px;
+            font-weight: 700;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
           }
         }
 
         .pulse-loader {
-          width: 50px;
-          height: 50px;
-          border: 5px solid rgba(255, 255, 255, 0.3);
-          border-top: 5px solid #ffa500;
+          width: 60px;
+          height: 60px;
+          border: 6px solid rgba(255, 255, 255, 0.3);
+          border-top: 6px solid #ffa500;
           border-radius: 50%;
           animation: spin 1s linear infinite;
           margin: 0 auto 20px;
+          box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
         }
       }
 
@@ -299,56 +389,62 @@
         justify-content: center;
 
         .temp-value {
-          font-size: 72px;
-          font-weight: 300;
+          font-size: 80px;
+          font-weight: 900;
           line-height: 1;
-          background: linear-gradient(45deg, #ffa500, #ff8c00);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: #ffa500;
           margin-bottom: 10px;
-          text-shadow: 0 0 30px rgba(255, 165, 0, 0.3);
+          text-shadow: 0 0 40px rgba(255, 165, 0, 0.8);
+          font-family: 'Arial Black', sans-serif;
         }
 
         .temp-unit {
-          font-size: 24px;
-          opacity: 0.8;
+          font-size: 28px;
+          opacity: 1;
           margin-bottom: 15px;
+          font-weight: 700;
+          text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
         }
 
         .temp-status {
           display: inline-block;
-          padding: 10px 24px;
+          padding: 12px 28px;
           border-radius: 30px;
-          font-weight: bold;
-          font-size: 18px;
+          font-weight: 900;
+          font-size: 20px;
+          text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
 
           &.status-normal {
-            background: rgba(46, 204, 113, 0.2);
-            border: 2px solid #2ecc71;
+            background: rgba(46, 204, 113, 0.3);
+            border: 3px solid #2ecc71;
             color: #2ecc71;
+            box-shadow: 0 0 30px rgba(46, 204, 113, 0.5);
           }
 
           &.status-elevated {
-            background: rgba(255, 193, 7, 0.2);
-            border: 2px solid #ffc107;
+            background: rgba(255, 193, 7, 0.3);
+            border: 3px solid #ffc107;
             color: #ffc107;
             animation: pulse 2s infinite;
+            box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
           }
 
           &.status-fever {
-            background: rgba(255, 71, 87, 0.2);
-            border: 2px solid #ff4757;
+            background: rgba(255, 71, 87, 0.3);
+            border: 3px solid #ff4757;
             color: #ff4757;
             animation: warningFlash 1.5s infinite;
+            box-shadow: 0 0 30px rgba(255, 71, 87, 0.5);
           }
         }
 
         .measuring-hint {
-          font-size: 20px;
-          opacity: 0.9;
+          font-size: 22px;
+          opacity: 1;
           margin-top: 15px;
           color: #ffa500;
+          font-weight: 700;
+          text-shadow: 0 0 20px rgba(255, 165, 0, 0.8);
         }
       }
     }
@@ -356,34 +452,39 @@
     /* Temperature Info Panel */
     .temp-info {
       .info-card.main {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.1);
+        border: 3px solid rgba(255, 165, 0, 0.4);
         border-radius: 20px;
         padding: 30px;
         backdrop-filter: blur(10px);
         margin-bottom: 30px;
         text-align: center;
+        box-shadow: 0 0 30px rgba(255, 165, 0, 0.3);
 
         .info-content {
           h3 {
-            font-size: 20px;
-            font-weight: 400;
-            opacity: 0.9;
+            font-size: 24px;
+            font-weight: 900;
+            opacity: 1;
             margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            font-family: 'Arial Black', sans-serif;
           }
 
           .info-value.large {
-            font-size: 48px;
-            font-weight: 300;
+            font-size: 56px;
+            font-weight: 900;
             margin: 20px 0;
+            text-shadow: 0 0 30px rgba(255, 165, 0, 0.8);
+            color: #ffa500;
           }
 
           .info-status {
             display: inline-block;
-            padding: 10px 24px;
+            padding: 12px 28px;
             border-radius: 30px;
-            font-weight: bold;
-            font-size: 18px;
+            font-weight: 900;
+            font-size: 20px;
           }
         }
       }
@@ -394,27 +495,33 @@
         gap: 15px;
 
         .info-item {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.08);
+          border: 3px solid rgba(255, 165, 0, 0.3);
           border-radius: 15px;
           padding: 20px;
           transition: all 0.3s ease;
           text-align: center;
+          box-shadow: 0 0 20px rgba(255, 165, 0, 0.2);
 
           &:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 165, 0, 0.5);
+            box-shadow: 0 0 30px rgba(255, 165, 0, 0.4);
+            transform: scale(1.02);
           }
 
           .item-label {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-bottom: 8px;
+            font-size: 15px;
+            opacity: 1;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
           }
 
           .item-value {
-            font-size: 24px;
-            font-weight: 300;
+            font-size: 26px;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
           }
         }
       }
@@ -426,53 +533,66 @@
     padding: 0 80px 40px;
 
     h2 {
-      font-size: 24px;
-      font-weight: 300;
+      font-size: 28px;
+      font-weight: 900;
       margin-bottom: 30px;
-      opacity: 0.9;
+      opacity: 1;
       text-align: center;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+      font-family: 'Arial Black', sans-serif;
     }
 
     .advice-card {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.1);
+      border: 3px solid rgba(255, 165, 0, 0.4);
       border-radius: 20px;
       padding: 30px;
       backdrop-filter: blur(10px);
       text-align: center;
       max-width: 800px;
       margin: 0 auto;
+      box-shadow: 0 0 30px rgba(255, 165, 0, 0.3);
 
       &.elevated {
-        background: rgba(255, 193, 7, 0.1);
-        border-color: rgba(255, 193, 7, 0.4);
+        background: rgba(255, 193, 7, 0.15);
+        border-color: rgba(255, 193, 7, 0.6);
+        box-shadow: 0 0 40px rgba(255, 193, 7, 0.4);
       }
 
       &.fever {
-        background: rgba(255, 71, 87, 0.1);
-        border-color: rgba(255, 71, 87, 0.4);
+        background: rgba(255, 71, 87, 0.15);
+        border-color: rgba(255, 71, 87, 0.6);
         animation: warningFlash 2s infinite;
+        box-shadow: 0 0 40px rgba(255, 71, 87, 0.4);
       }
 
       .advice-icon {
-        font-size: 48px;
+        font-size: 56px;
         margin-bottom: 15px;
       }
 
       .advice-text {
         font-size: 18px;
-        line-height: 1.6;
-        opacity: 0.9;
+        line-height: 1.7;
+        opacity: 1;
+        font-weight: 700;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
 
         p {
           margin: 15px 0;
+
+          strong {
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+          }
         }
 
         small {
           display: block;
           margin-top: 20px;
-          font-size: 14px;
-          opacity: 0.7;
+          font-size: 15px;
+          opacity: 1;
+          font-weight: 700;
         }
       }
     }
@@ -481,13 +601,25 @@
 
 /* Animations */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
 }
 
 @keyframes warningFlash {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%, 100% { 
+    opacity: 1;
+    box-shadow: 0 0 40px rgba(255, 71, 87, 0.4);
+  }
+  50% { 
+    opacity: 0.7;
+    box-shadow: 0 0 60px rgba(255, 71, 87, 0.6);
+  }
 }
 
 @keyframes spin {
@@ -518,6 +650,17 @@
       align-items: flex-start;
       gap: 20px;
       padding: 80px 20px 0;
+
+      .title-section {
+        svg {
+          width: 48px;
+          height: 48px;
+        }
+
+        .title-text h1 {
+          font-size: 32px;
+        }
+      }
     }
 
     .temp-display-container,
@@ -528,7 +671,7 @@
     .thermometer {
       .current-temp {
         .temp-value {
-          font-size: 56px;
+          font-size: 64px;
         }
       }
     }
@@ -544,13 +687,13 @@
     .thermometer {
       .current-temp {
         .temp-value {
-          font-size: 48px;
+          font-size: 56px;
         }
       }
     }
 
     .info-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr !important;
     }
   }
 }

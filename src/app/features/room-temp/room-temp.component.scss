@@ -9,26 +9,41 @@
   padding: 0;
   overflow: hidden;
 }
+
 .room-page {
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(135deg, #111929 0%, #536786 100%);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #000000;
+  font-family: 'Arial Black', 'Arial Bold', 'Helvetica Bold', sans-serif;
   color: #ffffff;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: fixed;
   margin: 0;
   padding: 0;
 
-  // Back Button
+  /* Rotating border animation */
+  @keyframes rotateBorder {
+    0% {
+      transform: rotate(0deg) scale(1);
+    }
+    50% {
+      transform: rotate(180deg) scale(1.15);
+    }
+    100% {
+      transform: rotate(360deg) scale(1);
+    }
+  }
+
+  // Back Button with Blue animated border
   .back-btn {
     position: fixed;
     top: 30px;
     left: 30px;
-    width: 50px;
-    height: 50px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 70px;
+    height: 70px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 5px solid transparent;
     border-radius: 50%;
     color: #ffffff;
     cursor: pointer;
@@ -38,11 +53,51 @@
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
     z-index: 100;
+    box-shadow: 0 0 30px rgba(100, 200, 255, 0.4);
+    position: relative;
+    overflow: visible;
+    background-clip: padding-box;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      padding: 5px;
+      background: linear-gradient(0deg, rgba(100, 200, 255, 0.3), rgba(100, 200, 255, 1), rgba(100, 200, 255, 1), rgba(100, 200, 255, 0.3));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: rotateBorder 3s linear infinite;
+      pointer-events: none;
+    }
+
+    svg {
+      filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+      stroke-width: 3;
+      width: 28px;
+      height: 28px;
+      position: relative;
+      z-index: 1;
+    }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.25);
-      border-color: rgba(255, 255, 255, 0.5);
+      background: rgba(100, 200, 255, 0.3);
+      box-shadow: 0 0 50px rgba(100, 200, 255, 0.6);
       transform: scale(1.05);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .disabling-text {
+      position: absolute;
+      bottom: -25px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
     }
   }
 
@@ -51,7 +106,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 30px 80px 0;
+    margin-top: -100px;
+    padding: 50px 100px;
     margin-bottom: 40px;
 
     .title-section {
@@ -60,26 +116,30 @@
       gap: 20px;
 
       svg {
-        width: 48px;
-        height: 48px;
+        width: 56px;
+        height: 56px;
         color: #64c8ff;
-        filter: drop-shadow(0 0 15px rgba(100, 200, 255, 0.5));
+        filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.8));
+        stroke-width: 2.5;
       }
 
       .title-text {
         h1 {
-          font-size: 36px;
-          font-weight: 300;
+          font-size: 42px;
+          font-weight: 900;
           margin: 0;
-          letter-spacing: 1px;
-          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+          letter-spacing: 2px;
+          text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+          font-family: 'Arial Black', sans-serif;
         }
 
         .subtitle {
           font-size: 16px;
-          opacity: 0.8;
-          font-weight: 300;
-          margin-top: 5px;
+          opacity: 1;
+          font-weight: 700;
+          margin-top: 8px;
+          text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+          font-family: 'Arial', sans-serif;
         }
       }
     }
@@ -91,114 +151,208 @@
 
       .room-name {
         font-size: 18px;
-        font-weight: 500;
-        opacity: 0.9;
-        padding: 8px 20px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
+        font-weight: 900;
+        opacity: 1;
+        padding: 10px 24px;
+        background: rgba(100, 200, 255, 0.2);
+        border-radius: 25px;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+        border: 3px solid rgba(100, 200, 255, 0.4);
       }
 
       .room-status {
-        padding: 8px 20px;
+        padding: 12px 24px;
         border-radius: 30px;
         backdrop-filter: blur(10px);
         display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 500;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        font-weight: 700;
+        border: 3px solid;
+        background: rgba(255, 255, 255, 0.15);
 
-        &.optimal {
-          background: rgba(46, 204, 113, 0.15);
-          border: 1px solid rgba(46, 204, 113, 0.3);
+        span {
+          font-weight: 700;
+          font-size: 15px;
+          text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+        }
+
+        &.optimal,
+        &.online {
+          background: rgba(46, 204, 113, 0.2);
+          border-color: rgba(46, 204, 113, 0.5);
 
           .status-dot {
             background: #2ecc71;
             animation: pulse 2s infinite;
+            box-shadow: 0 0 15px #2ecc71;
           }
         }
 
-        &.good {
-          background: rgba(255, 193, 7, 0.15);
-          border: 1px solid rgba(255, 193, 7, 0.3);
+        &.good,
+        &.connecting {
+          background: rgba(255, 193, 7, 0.2);
+          border-color: rgba(255, 193, 7, 0.5);
 
           .status-dot {
             background: #ffc107;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 15px #ffc107;
           }
         }
 
-        &.poor {
-          background: rgba(255, 71, 87, 0.15);
-          border: 1px solid rgba(255, 71, 87, 0.3);
+        &.poor,
+        &.offline {
+          background: rgba(255, 71, 87, 0.2);
+          border-color: rgba(255, 71, 87, 0.5);
 
           .status-dot {
             background: #ff4757;
             animation: pulse 1.5s infinite;
+            box-shadow: 0 0 15px #ff4757;
           }
         }
 
         .status-dot {
-          width: 8px;
-          height: 8px;
+          width: 14px;
+          height: 14px;
           border-radius: 50%;
+          display: inline-block;
+          margin-right: 8px;
+        }
+
+        small {
+          font-size: 13px;
+          opacity: 1;
+          font-weight: 700;
+          text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
         }
       }
+    }
+  }
+
+  // Loading & Error States
+  .loading-overlay {
+    text-align: center;
+    padding: 60px 20px;
+    font-size: 20px;
+    opacity: 1;
+    font-weight: 700;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+
+    p {
+      margin: 15px 0;
+    }
+  }
+
+  .error-message {
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: white;
+    padding: 1.2rem 1.8rem;
+    border-radius: 16px;
+    margin: 0 80px 30px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: slideDown 0.3s ease-out;
+    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.5);
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    text-align: left;
+
+    svg {
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+      width: 24px;
+      height: 24px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.5;
+      font-weight: 700;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-15px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 
   // Dashboard
   .dashboard {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
     padding: 0 80px;
     margin-bottom: 50px;
+    margin-top: -50px;
 
     .sensor-card {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.1);
+      border: 3px solid;
       border-radius: 25px;
-      padding: 30px;
+      padding: 35px;
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
+      box-shadow: 0 0 30px rgba(100, 200, 255, 0.3);
 
       &:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.25);
+        background: rgba(100, 200, 255, 0.15);
         transform: translateY(-5px);
       }
 
       // Temperature Card
       &.temperature {
-        border-top: 4px solid #64c8ff;
+        border-color: rgba(100, 200, 255, 0.5);
+
+        &:hover {
+          border-color: rgba(100, 200, 255, 0.8);
+          box-shadow: 0 0 50px rgba(100, 200, 255, 0.5);
+        }
 
         .sensor-icon {
-          background: rgba(100, 200, 255, 0.2);
+          background: rgba(100, 200, 255, 0.3);
         }
 
         .range-fill {
           background: linear-gradient(90deg, #64c8ff, #1e90ff);
+          box-shadow: 0 0 20px rgba(100, 200, 255, 0.6);
+        }
+
+        .range-indicator {
+          box-shadow: 0 0 25px rgba(100, 200, 255, 0.9);
         }
       }
 
       // Humidity Card
       &.humidity {
-        border-top: 4px solid #2ecc71;
+        border-color: rgba(46, 204, 113, 0.5);
+
+        &:hover {
+          border-color: rgba(46, 204, 113, 0.8);
+          box-shadow: 0 0 50px rgba(46, 204, 113, 0.5);
+        }
 
         .sensor-icon {
-          background: rgba(46, 204, 113, 0.2);
+          background: rgba(46, 204, 113, 0.3);
         }
 
         .range-fill {
           background: linear-gradient(90deg, #2ecc71, #27ae60);
+          box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
         }
-      }
 
-      // Air Quality Card
-      &.air-quality {
-        border-top: 4px solid #ffc107;
-
-        .sensor-icon {
-          background: rgba(255, 193, 7, 0.2);
+        .range-indicator {
+          box-shadow: 0 0 25px rgba(46, 204, 113, 0.9);
         }
       }
 
@@ -206,67 +360,53 @@
         display: flex;
         align-items: center;
         gap: 20px;
-        margin-bottom: 25px;
+        margin-bottom: 30px;
 
         .sensor-icon {
-          font-size: 32px;
-          width: 60px;
-          height: 60px;
-          border-radius: 15px;
+          font-size: 36px;
+          width: 70px;
+          height: 70px;
+          border-radius: 18px;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .sensor-title {
-          h3 {
-            font-size: 20px;
-            font-weight: 500;
-            margin: 0 0 5px 0;
-            opacity: 0.9;
-          }
-
-          .sensor-unit {
-            font-size: 14px;
-            opacity: 0.7;
-          }
+        h3 {
+          font-size: 26px;
+          font-weight: 900;
+          margin: 0;
+          opacity: 1;
+          text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+          font-family: 'Arial Black', sans-serif;
         }
       }
 
       .sensor-value {
-        margin-bottom: 25px;
+        margin-bottom: 30px;
 
         .current-value {
-          font-size: 64px;
-          font-weight: 300;
+          font-size: 72px;
+          font-weight: 900;
           line-height: 1;
-          margin-bottom: 10px;
+          margin-bottom: 15px;
+          font-family: 'Arial Black', sans-serif;
+          text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
 
           .temperature & {
-            background: linear-gradient(45deg, #64c8ff, #1e90ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #64c8ff;
           }
 
           .humidity & {
-            background: linear-gradient(45deg, #2ecc71, #27ae60);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #2ecc71;
           }
 
-          .air-quality & {
-            background: linear-gradient(45deg, #ffc107, #ff9800);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+          .unit {
+            font-size: 28px;
+            opacity: 0.8;
+            margin-left: 5px;
+            font-weight: 700;
           }
-        }
-
-        .value-trend {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          opacity: 0.8;
         }
       }
 
@@ -275,10 +415,10 @@
 
         .range-bar {
           position: relative;
-          height: 8px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 4px;
-          margin-bottom: 10px;
+          height: 12px;
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 6px;
+          margin-bottom: 15px;
           overflow: visible;
 
           .range-fill {
@@ -286,19 +426,19 @@
             top: 0;
             left: 0;
             height: 100%;
-            border-radius: 4px;
+            border-radius: 6px;
             transition: width 1s ease;
           }
 
           .range-indicator {
             position: absolute;
-            top: -4px;
-            width: 16px;
-            height: 16px;
+            top: -6px;
+            width: 24px;
+            height: 24px;
             background: #ffffff;
             border-radius: 50%;
             transform: translateX(-50%);
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.9);
             transition: left 1s ease;
           }
         }
@@ -306,170 +446,16 @@
         .range-labels {
           display: flex;
           justify-content: space-between;
-          font-size: 12px;
-          opacity: 0.7;
+          font-size: 14px;
+          opacity: 1;
+          font-weight: 700;
+          text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
 
           .comfort-range {
             color: #2ecc71;
-            font-weight: 500;
+            font-weight: 900;
+            text-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
           }
-        }
-      }
-
-      .sensor-stats {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
-
-        .stat {
-          text-align: center;
-          padding: 15px;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 12px;
-
-          .stat-label {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-bottom: 5px;
-          }
-
-          .stat-value {
-            font-size: 18px;
-            font-weight: 500;
-          }
-        }
-      }
-
-      .humidity-details {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-
-        .detail-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 15px;
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 12px;
-
-          .detail-icon {
-            font-size: 20px;
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-
-          .detail-content {
-            .detail-label {
-              font-size: 12px;
-              opacity: 0.7;
-              margin-bottom: 4px;
-            }
-
-            .detail-value {
-              font-size: 18px;
-              font-weight: 500;
-            }
-          }
-        }
-      }
-
-      .aqi-breakdown {
-        margin-bottom: 25px;
-
-        .aqi-parameter {
-          margin-bottom: 15px;
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          .parameter-name {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-bottom: 5px;
-          }
-
-          .parameter-value {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 8px;
-          }
-
-          .parameter-bar {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            overflow: hidden;
-
-            .bar-fill {
-              height: 100%;
-              transition: width 1s ease;
-
-              .good & { background: #2ecc71; }
-              .moderate & { background: #ffc107; }
-              .poor & { background: #ff4757; }
-            }
-          }
-        }
-      }
-
-      .aqi-level {
-        display: inline-block;
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 500;
-        margin-bottom: 25px;
-
-        &.good {
-          background: rgba(46, 204, 113, 0.15);
-          border: 1px solid rgba(46, 204, 113, 0.3);
-          color: #2ecc71;
-        }
-
-        &.moderate {
-          background: rgba(255, 193, 7, 0.15);
-          border: 1px solid rgba(255, 193, 7, 0.3);
-          color: #ffc107;
-        }
-
-        &.poor {
-          background: rgba(255, 71, 87, 0.15);
-          border: 1px solid rgba(255, 71, 87, 0.3);
-          color: #ff4757;
-          animation: pulse 2s infinite;
-        }
-      }
-
-      .air-advice {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        padding: 15px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 15px;
-
-        .advice-icon {
-          font-size: 24px;
-          width: 50px;
-          height: 50px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 12px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .advice-text {
-          font-size: 14px;
-          opacity: 0.9;
-          line-height: 1.4;
         }
       }
     }
@@ -477,282 +463,66 @@
 
   // Comfort Section
   .comfort-section {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 3px solid rgba(100, 200, 255, 0.3);
     padding: 40px 80px;
     margin-bottom: 40px;
 
     h2 {
-      font-size: 24px;
-      font-weight: 300;
+      font-size: 28px;
+      font-weight: 900;
       margin: 0 0 30px 0;
-      opacity: 0.9;
+      opacity: 1;
+      text-align: center;
+      text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+      font-family: 'Arial Black', sans-serif;
     }
 
-    .comfort-grid {
-      display: grid;
-      grid-template-columns: auto 1fr 1fr;
-      gap: 40px;
-      align-items: center;
+    .comfort-meter {
+      text-align: center;
+      margin: 30px 0;
 
-      .comfort-meter {
-        text-align: center;
-
-        .meter-circle {
-          position: relative;
-          width: 150px;
-          height: 150px;
-          border-radius: 50%;
-          margin: 0 auto 15px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          &::before {
-            content: '';
-            position: absolute;
-            width: 130px;
-            height: 130px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            border-radius: 50%;
-          }
-
-          .meter-value {
-            position: relative;
-            font-size: 36px;
-            font-weight: 300;
-            z-index: 1;
-          }
-
-          .meter-label {
-            position: relative;
-            font-size: 16px;
-            opacity: 0.7;
-            z-index: 1;
-            margin-top: 5px;
-          }
-        }
-
-        .comfort-level {
-          font-size: 16px;
-          font-weight: 500;
-          margin-top: 10px;
-        }
-      }
-
-      .comfort-factors {
-        .factor {
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          margin-bottom: 15px;
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          .factor-name {
-            font-size: 14px;
-            opacity: 0.8;
-            min-width: 100px;
-          }
-
-          .factor-bar {
-            flex: 1;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-
-            .bar-fill {
-              height: 100%;
-              transition: width 1s ease;
-
-              &.excellent { background: #2ecc71; }
-              &.good { background: #ffc107; }
-              &.poor { background: #ff4757; }
-            }
-          }
-
-          .factor-value {
-            font-size: 14px;
-            font-weight: 500;
-            min-width: 40px;
-            text-align: right;
-          }
-        }
-      }
-
-      .comfort-tips {
-        h3 {
-          font-size: 18px;
-          font-weight: 500;
-          margin: 0 0 15px 0;
-          opacity: 0.9;
-        }
-
-        ul {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-
-          li {
-            position: relative;
-            padding-left: 25px;
-            margin-bottom: 10px;
-            font-size: 14px;
-            opacity: 0.8;
-            line-height: 1.5;
-
-            &:last-child {
-              margin-bottom: 0;
-            }
-
-            &::before {
-              content: '•';
-              position: absolute;
-              left: 0;
-              color: #64c8ff;
-              font-size: 20px;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // History Section
-  .history-section {
-    padding: 0 80px 40px;
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-
-      h2 {
-        font-size: 24px;
-        font-weight: 300;
-        margin: 0;
-        opacity: 0.9;
-      }
-
-      .chart-legend {
+      .meter-circle {
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
         display: flex;
-        gap: 20px;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        margin: 0 auto 20px;
+        border: 5px solid rgba(100, 200, 255, 0.5);
+        box-shadow: 0 0 40px rgba(100, 200, 255, 0.4);
+        position: relative;
+        overflow: hidden;
 
-        .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          opacity: 0.8;
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.3);
+          border-radius: 50%;
+        }
 
-          .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-
-            &.temp {
-              background: #64c8ff;
-            }
-
-            &.humidity {
-              background: #2ecc71;
-            }
-          }
+        .meter-value {
+          font-size: 42px;
+          font-weight: 900;
+          color: white;
+          z-index: 1;
+          position: relative;
+          text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+          font-family: 'Arial Black', sans-serif;
         }
       }
     }
 
-    .history-chart {
-      position: relative;
-      height: 300px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 20px;
-      padding: 30px;
-      backdrop-filter: blur(10px);
-
-      .chart-grid {
-        position: absolute;
-        top: 30px;
-        left: 30px;
-        right: 30px;
-        bottom: 60px;
-
-        .grid-line {
-          position: absolute;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: rgba(255, 255, 255, 0.1);
-        }
-      }
-
-      .chart-data {
-        position: absolute;
-        top: 30px;
-        left: 30px;
-        right: 30px;
-        bottom: 60px;
-
-        .temp-line, .humidity-line {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-        }
-
-        .data-point {
-          position: absolute;
-          width: 8px;
-          height: 8px;
-          background: #64c8ff;
-          border-radius: 50%;
-          transform: translate(-50%, 50%);
-          cursor: pointer;
-          transition: all 0.3s ease;
-
-          &:hover {
-            transform: translate(-50%, 50%) scale(1.5);
-            box-shadow: 0 0 10px rgba(100, 200, 255, 0.8);
-
-            .point-value {
-              opacity: 1;
-            }
-          }
-
-          .point-value {
-            position: absolute;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            white-space: nowrap;
-          }
-        }
-      }
-
-      .chart-axis {
-        position: absolute;
-        bottom: 20px;
-        left: 30px;
-        right: 30px;
-        height: 40px;
-
-        .axis-label {
-          position: absolute;
-          transform: translateX(-50%);
-          font-size: 12px;
-          opacity: 0.7;
-        }
-      }
+    .comfort-text {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 900;
+      margin-top: 15px;
+      text-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
     }
   }
 }
@@ -761,9 +531,11 @@
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.6;
+    transform: scale(1.15);
   }
 }
 
@@ -772,31 +544,13 @@
   .room-page {
     .page-header,
     .dashboard,
-    .comfort-section,
-    .history-section {
+    .comfort-section {
       padding: 0 40px;
     }
 
     .dashboard {
       grid-template-columns: 1fr;
       gap: 30px;
-    }
-
-    .comfort-grid {
-      grid-template-columns: 1fr !important;
-      gap: 30px !important;
-
-      .comfort-meter {
-        order: 1;
-      }
-
-      .comfort-factors {
-        order: 2;
-      }
-
-      .comfort-tips {
-        order: 3;
-      }
     }
   }
 }
@@ -807,68 +561,56 @@
       flex-direction: column;
       align-items: flex-start;
       gap: 20px;
-      padding-top: 80px;
+      padding: 80px 20px 0;
+
+      .title-section {
+        svg {
+          width: 48px;
+          height: 48px;
+        }
+
+        .title-text h1 {
+          font-size: 32px;
+        }
+      }
+
+      .room-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        width: 100%;
+      }
     }
 
     .dashboard,
-    .comfort-section,
-    .history-section {
+    .comfort-section {
       padding: 0 20px;
     }
 
-    .history-chart {
-      height: 250px !important;
-      padding: 20px !important;
+    .error-message {
+      margin-left: 20px;
+      margin-right: 20px;
     }
 
-    .section-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 15px;
+    .sensor-card .sensor-value .current-value {
+      font-size: 56px;
     }
   }
 }
-.loading-overlay, .error-message {
-  text-align: center;
-  padding: 40px;
-  color: #aaa;
-  font-size: 1.2em;
-}
 
-.room-status {
-  &.online .status-dot { background: #2ecc71; }
-  &.connecting .status-dot { background: #f39c12; animation: pulse 1.5s infinite; }
-  &.offline .status-dot { background: #e74c3c; }
-}
+@media (max-width: 480px) {
+  .room-page {
+    .sensor-card .sensor-value .current-value {
+      font-size: 48px;
+    }
 
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 8px;
-}
+    .comfort-meter .meter-circle {
+      width: 180px;
+      height: 180px;
 
-.comfort-meter {
-  text-align: center;
-  margin: 30px 0;
-}
-
-.meter-circle {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  color: white;
-  font-size: 2em;
-  font-weight: bold;
-  margin: 0 auto;
-  background: #34495e;
-}
-
-.meter-value {
-  font-size: 3em;
+      .meter-value {
+        font-size: 36px;
+      }
+    }
+  }
 }

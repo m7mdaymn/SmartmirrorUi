@@ -529,16 +529,16 @@ html, body {
     }
   }
 
-  // Gas Detection - Yellow warning pulse with yellow border
+  // Gas Detection - Green warning pulse with green border
   .right-buttons .icon-btn:nth-child(2) {
     &::before {
-      background: linear-gradient(0deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 1), rgba(255, 215, 0, 1), rgba(255, 215, 0, 0.3));
+      background: linear-gradient(0deg, rgba(46, 204, 113, 0.3), rgba(46, 204, 113, 1), rgba(46, 204, 113, 1), rgba(46, 204, 113, 0.3));
       padding: 5px;
     }
 
     &:hover {
-      background: rgba(255, 215, 0, 0.3);
-      box-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+      background: rgba(46, 204, 113, 0.3);
+      box-shadow: 0 0 50px rgba(46, 204, 113, 0.6);
     }
 
     &:active {
