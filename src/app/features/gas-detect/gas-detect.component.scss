@@ -159,7 +159,7 @@
         width: 56px;
         height: 56px;
         color: #2ecc71;
-        filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+        filter: drop-shadow(0 0 20px rgba(46, 204, 113, 0.8));
         stroke-width: 2.5;
       }
 
@@ -213,7 +213,8 @@
         }
       }
 
-      &.warning {
+      &.warning,
+      &.connecting {
         background: rgba(255, 193, 7, 0.2);
         border-color: rgba(255, 193, 7, 0.5);
 
@@ -224,7 +225,8 @@
         }
       }
 
-      &.emergency {
+      &.emergency,
+      &.offline {
         background: rgba(255, 71, 87, 0.2);
         border-color: rgba(255, 71, 87, 0.5);
 
@@ -254,15 +256,89 @@
 
   // Loading & Error States
   .loading-overlay {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 60px 20px;
-    font-size: 20px;
-    opacity: 1;
-    font-weight: 700;
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+    min-height: 400px;
 
-    p {
-      margin: 15px 0;
+    .loading-content {
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+
+      .loading-spinner {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 30px;
+
+        svg {
+          transform: rotate(-90deg);
+          filter: drop-shadow(0 0 20px rgba(46, 204, 113, 0.6));
+        }
+
+        .progress-circle {
+          transition: stroke-dashoffset 0.3s ease;
+        }
+
+        .progress-percentage {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 24px;
+          font-weight: 900;
+          color: #2ecc71;
+          text-shadow: 0 0 20px rgba(46, 204, 113, 0.8);
+        }
+      }
+
+      .loading-message {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 20px 0;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        animation: fadeInOut 2s ease-in-out infinite;
+      }
+
+      .loading-bar-container {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 25px;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+
+        .loading-bar {
+          height: 100%;
+          background: linear-gradient(90deg, #2ecc71, #27ae60, #2ecc71);
+          background-size: 200% 100%;
+          border-radius: 4px;
+          transition: width 0.3s ease;
+          animation: shimmer 2s linear infinite;
+          box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
+        }
+      }
+    }
+  }
+
+  @keyframes fadeInOut {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
     }
   }
 
@@ -287,12 +363,22 @@
       height: 24px;
     }
 
+    div {
+      flex: 1;
+    }
+
     p {
-      margin: 0;
+      margin: 0 0 8px 0;
       font-size: 1rem;
       line-height: 1.5;
       font-weight: 700;
       text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+
+      &:last-child {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
     }
   }
 
@@ -323,7 +409,7 @@
       padding: 30px;
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+      box-shadow: 0 0 30px rgba(46, 204, 113, 0.2);
 
       &.safe,
       &.excellent,
@@ -380,16 +466,16 @@
 
           .safe &,
           .excellent &,
-          .good & { 
-            background: rgba(46, 204, 113, 0.3); 
+          .good & {
+            background: rgba(46, 204, 113, 0.3);
           }
           .warning &,
-          .moderate & { 
-            background: rgba(255, 193, 7, 0.3); 
+          .moderate & {
+            background: rgba(255, 193, 7, 0.3);
           }
           .danger &,
-          .poor & { 
-            background: rgba(255, 71, 87, 0.3); 
+          .poor & {
+            background: rgba(255, 71, 87, 0.3);
           }
         }
 
@@ -479,18 +565,18 @@
 
             .safe &,
             .excellent &,
-            .good & { 
-              background: linear-gradient(90deg, #2ecc71, #27ae60); 
+            .good & {
+              background: linear-gradient(90deg, #2ecc71, #27ae60);
               box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
             }
             .warning &,
-            .moderate & { 
-              background: linear-gradient(90deg, #ffc107, #ff9800); 
+            .moderate & {
+              background: linear-gradient(90deg, #ffc107, #ff9800);
               box-shadow: 0 0 20px rgba(255, 193, 7, 0.6);
             }
             .danger &,
-            .poor & { 
-              background: linear-gradient(90deg, #ff4757, #ff3838); 
+            .poor & {
+              background: linear-gradient(90deg, #ff4757, #ff3838);
               box-shadow: 0 0 20px rgba(255, 71, 87, 0.6);
             }
           }
@@ -508,16 +594,16 @@
 
             .safe &,
             .excellent &,
-            .good & { 
-              box-shadow: 0 0 25px rgba(46, 204, 113, 0.9); 
+            .good & {
+              box-shadow: 0 0 25px rgba(46, 204, 113, 0.9);
             }
             .warning &,
-            .moderate & { 
-              box-shadow: 0 0 25px rgba(255, 193, 7, 0.9); 
+            .moderate & {
+              box-shadow: 0 0 25px rgba(255, 193, 7, 0.9);
             }
             .danger &,
-            .poor & { 
-              box-shadow: 0 0 25px rgba(255, 71, 87, 0.9); 
+            .poor & {
+              box-shadow: 0 0 25px rgba(255, 71, 87, 0.9);
             }
           }
         }
@@ -575,65 +661,254 @@
     }
   }
 
-  // Recommendation Section
-  .advice-section {
-    padding: 0 80px 40px;
+  // Environmental Analysis Section
+  .analysis-section {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border-top: 3px solid rgba(46, 204, 113, 0.3);
+    padding: 50px 80px 60px;
+    margin-bottom: 40px;
 
     h2 {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 900;
-      margin-bottom: 30px;
-      opacity: 1;
+      margin: 0 0 40px 0;
       text-align: center;
       text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
       font-family: 'Arial Black', sans-serif;
+      background: linear-gradient(135deg, #2ecc71, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .advice-card {
-      background: rgba(255, 255, 255, 0.1);
-      border: 3px solid rgba(255, 215, 0, 0.4);
-      border-radius: 20px;
-      padding: 30px;
-      backdrop-filter: blur(10px);
-      text-align: center;
-      max-width: 800px;
-      margin: 0 auto;
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
 
-      &.warning {
-        background: rgba(255, 193, 7, 0.15);
-        border-color: rgba(255, 193, 7, 0.6);
-        box-shadow: 0 0 40px rgba(255, 193, 7, 0.4);
-      }
+      .analysis-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 3px solid rgba(46, 204, 113, 0.3);
+        border-radius: 20px;
+        padding: 30px;
+        backdrop-filter: blur(15px);
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
 
-      &.danger {
-        background: rgba(255, 71, 87, 0.15);
-        border-color: rgba(255, 71, 87, 0.6);
-        animation: warningFlash 2s infinite;
-        box-shadow: 0 0 40px rgba(255, 71, 87, 0.4);
-      }
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(46, 204, 113, 0.1), transparent);
+          transition: left 0.6s ease;
+        }
 
-      .advice-icon {
-        font-size: 56px;
-        margin-bottom: 15px;
-      }
+        &:hover {
+          border-color: rgba(46, 204, 113, 0.6);
+          transform: translateY(-5px);
+          box-shadow: 0 10px 40px rgba(46, 204, 113, 0.3);
 
-      .advice-text {
-        font-size: 18px;
-        line-height: 1.7;
-        opacity: 1;
-        font-weight: 700;
-        text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+          &::before {
+            left: 100%;
+          }
+        }
 
-        p {
-          margin: 15px 0;
+        .card-header {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 25px;
 
-          strong {
-            font-weight: 900;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+          .icon-wrapper {
+            width: 60px;
+            height: 60px;
+            background: rgba(46, 204, 113, 0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
+          }
+
+          .header-text {
+            flex: 1;
+
+            h3 {
+              font-size: 20px;
+              font-weight: 900;
+              margin: 0 0 5px 0;
+              text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+            }
+
+            .status-label {
+              font-size: 14px;
+              font-weight: 700;
+              margin: 0;
+              opacity: 0.9;
+              text-shadow: 0 0 10px currentColor;
+            }
           }
         }
       }
+
+      // Quality Card Specific
+      .quality-card {
+        &[data-level="excellent"],
+        &[data-level="good"] {
+          border-color: rgba(46, 204, 113, 0.5);
+
+          &:hover {
+            border-color: rgba(46, 204, 113, 0.8);
+            box-shadow: 0 10px 40px rgba(46, 204, 113, 0.3);
+          }
+
+          .icon-wrapper {
+            background: rgba(46, 204, 113, 0.2);
+          }
+        }
+
+        &[data-level="moderate"],
+        &[data-level="warning"] {
+          border-color: rgba(243, 156, 18, 0.5);
+
+          &:hover {
+            border-color: rgba(243, 156, 18, 0.8);
+            box-shadow: 0 10px 40px rgba(243, 156, 18, 0.3);
+          }
+
+          .icon-wrapper {
+            background: rgba(243, 156, 18, 0.2);
+          }
+        }
+
+        &[data-level="poor"],
+        &[data-level="danger"] {
+          border-color: rgba(231, 76, 60, 0.5);
+
+          &:hover {
+            border-color: rgba(231, 76, 60, 0.8);
+            box-shadow: 0 10px 40px rgba(231, 76, 60, 0.3);
+          }
+
+          .icon-wrapper {
+            background: rgba(231, 76, 60, 0.2);
+          }
+        }
+
+        .score-visual {
+          position: relative;
+          width: 100px;
+          height: 100px;
+          margin: 20px auto;
+
+          svg {
+            transform: rotate(-90deg);
+            filter: drop-shadow(0 0 15px currentColor);
+          }
+
+          .score-circle {
+            transition: stroke-dashoffset 1s ease;
+          }
+
+          .score-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: 900;
+            text-shadow: 0 0 20px currentColor;
+          }
+        }
+      }
+
+      // Gas Levels Card
+      .levels-card {
+        .quality-bars {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+
+          .quality-item {
+            span {
+              display: block;
+              font-size: 14px;
+              font-weight: 700;
+              margin-bottom: 8px;
+              text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            }
+
+            .bar-container {
+              height: 12px;
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 6px;
+              overflow: hidden;
+              box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+
+              .bar {
+                height: 100%;
+                border-radius: 6px;
+                transition: width 1s ease;
+                box-shadow: 0 0 15px currentColor;
+              }
+            }
+          }
+        }
+      }
+
+      // Recommendations Card
+      .recommendations-card {
+        .recommendations-list {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+
+          .recommendation {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 2px solid rgba(46, 204, 113, 0.2);
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: rgba(46, 204, 113, 0.1);
+              border-color: rgba(46, 204, 113, 0.4);
+              transform: translateX(5px);
+            }
+
+            .rec-icon {
+              font-size: 24px;
+              flex-shrink: 0;
+            }
+
+            .rec-text {
+              font-size: 14px;
+              font-weight: 600;
+              line-height: 1.4;
+              text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+            }
+          }
+        }
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .analysis-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      padding: 40px 20px 50px;
     }
   }
 }
@@ -717,7 +992,7 @@
   .gas-page {
     .page-header,
     .dashboard,
-    .advice-section {
+    .analysis-section {
       padding: 0 40px;
     }
 
@@ -752,8 +1027,7 @@
       }
     }
 
-    .dashboard,
-    .advice-section {
+    .dashboard {
       padding: 0 20px;
     }
 

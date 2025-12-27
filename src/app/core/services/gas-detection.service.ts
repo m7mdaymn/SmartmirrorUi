@@ -6,8 +6,15 @@ import { API_ENDPOINTS } from '../constant/api-endpoints';
 export interface GasReading {
   id: number;
   rawValue: number;
-  quality: string;
-  ppm?: number | null;
+  voltage?: number;
+  resistance?: number;
+  co2_ppm: number;
+  co2_percentage: number;
+  co2_status: string;
+  smoke_level: number;
+  smoke_status: string;
+  aqi_score: number;
+  overall_quality: string;
   timestamp: string;
   deviceId: string;
 }
@@ -33,32 +40,30 @@ export class GasDetectionService {
 
   constructor(private http: HttpClient) { }
 
-  /**
-   * Send new gas reading from ESP32 to backend
-   */
   sendReading(data: {
     rawValue: number;
-    quality: string;
-    ppm?: number;
-    deviceId?: string
+    voltage?: number;
+    resistance?: number;
+    co2_ppm: number;
+    co2_percentage: number;
+    co2_status: string;
+    smoke_level: number;
+    smoke_status: string;
+    aqi_score: number;
+    overall_quality: string;
+    deviceId?: string;
   }): Observable<GasApiResponse> {
     return this.http.post<GasApiResponse>(API_ENDPOINTS.gas.create, data).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Get latest gas reading
-   */
   getLatest(): Observable<GasApiResponse> {
     return this.http.get<GasApiResponse>(API_ENDPOINTS.gas.latest).pipe(
       catchError(this.handleError)
     );
   }
 
-  /**
-   * Get all gas readings (with optional limit)
-   */
   getAll(limit: number = 50): Observable<GasApiResponse> {
     const url = `${API_ENDPOINTS.gas.getAll}?limit=${limit}`;
     return this.http.get<GasApiResponse>(url).pipe(
@@ -66,10 +71,6 @@ export class GasDetectionService {
     );
   }
 
-  /**
-   * Disable the MQ135 gas sensor
-   * Sends POST request to /api/control/sensor/mq135 with {enabled: false}
-   */
   disableSensor(): Observable<SensorControlResponse> {
     return this.http.post<SensorControlResponse>(
       API_ENDPOINTS.control.disableSensor('mq135'),
@@ -79,10 +80,6 @@ export class GasDetectionService {
     );
   }
 
-  /**
-   * Enable the MQ135 gas sensor
-   * Sends POST request to /api/control/sensor/mq135 with {enabled: true}
-   */
   enableSensor(): Observable<SensorControlResponse> {
     return this.http.post<SensorControlResponse>(
       API_ENDPOINTS.control.enableSensor('mq135'),
@@ -92,17 +89,12 @@ export class GasDetectionService {
     );
   }
 
-  /**
-   * Centralized error handler
-   */
   private handleError(error: any): Observable<never> {
     let errorMessage = 'An unknown error occurred';
 
     if (error.error instanceof ErrorEvent) {
-      // Client-side error
       errorMessage = error.error.message;
     } else {
-      // Server-side error
       errorMessage = error.error?.message || error.message || `Server Error: ${error.status}`;
     }
 

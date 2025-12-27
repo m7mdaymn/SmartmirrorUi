@@ -18,7 +18,12 @@ export class RoomTempComponent implements OnInit, OnDestroy {
   lastUpdated: string = '';
   isDisabling = false;
 
+  // Loading progress properties
+  loadingProgress = 0;
+  loadingMessage = 'Initializing sensor...';
+
   private pollSubscription!: Subscription;
+  private progressInterval?: any;
 
   constructor(
     private roomTempService: RoomTempService,
@@ -26,6 +31,9 @@ export class RoomTempComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Start loading progress animation
+    this.startLoadingProgress();
+
     // Poll every 8 seconds (ESP32 sends data every 10s)
     this.pollSubscription = interval(8000)
       .pipe(
@@ -36,21 +44,21 @@ export class RoomTempComponent implements OnInit, OnDestroy {
           if (response.success && response.data) {
             this.latestReading = response.data as RoomTempReading;
             this.updateLastUpdated();
-            this.loading = false;
+            this.completeLoading();
             this.error = null;
           } else {
             this.error = 'No data received yet';
-            this.loading = false;
+            this.completeLoading();
           }
         },
         error: (err) => {
           this.error = 'Failed to connect to sensor';
-          this.loading = false;
+          this.completeLoading();
           console.error('Room temp polling error:', err);
         }
       });
 
-    // Initial load
+    // Initial load with 7-second minimum
     this.loadLatest();
   }
 
@@ -58,21 +66,70 @@ export class RoomTempComponent implements OnInit, OnDestroy {
     if (this.pollSubscription) {
       this.pollSubscription.unsubscribe();
     }
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
+  }
+
+  /**
+   * Start the 7-second loading progress animation
+   */
+  startLoadingProgress(): void {
+    this.loadingProgress = 0;
+    const duration = 7000; // 7 seconds
+    const updateInterval = 50; // Update every 50ms
+    const totalSteps = duration / updateInterval;
+    let currentStep = 0;
+
+    this.progressInterval = setInterval(() => {
+      currentStep++;
+      this.loadingProgress = Math.min((currentStep / totalSteps) * 100, 100);
+
+      // Update loading message based on progress
+      if (this.loadingProgress < 30) {
+        this.loadingMessage = 'Initializing sensor...';
+      } else if (this.loadingProgress < 60) {
+        this.loadingMessage = 'Reading temperature data...';
+      } else if (this.loadingProgress < 90) {
+        this.loadingMessage = 'Processing humidity values...';
+      } else {
+        this.loadingMessage = 'Almost ready...';
+      }
+
+      // Stop at 100%
+      if (this.loadingProgress >= 100) {
+        clearInterval(this.progressInterval);
+      }
+    }, updateInterval);
+  }
+
+  /**
+   * Complete loading and clear progress interval
+   */
+  completeLoading(): void {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
+    this.loadingProgress = 100;
+
+    // Small delay to show 100% before hiding
+    setTimeout(() => {
+      this.loading = false;
+    }, 300);
   }
 
   loadLatest(): void {
-    this.loading = true;
     this.roomTempService.getLatest().subscribe({
       next: (response) => {
         if (response.success && response.data) {
           this.latestReading = response.data as RoomTempReading;
           this.updateLastUpdated();
         }
-        this.loading = false;
+        // Don't set loading to false here - let the progress complete
       },
       error: (err) => {
         this.error = 'Sensor offline or not enabled';
-        this.loading = false;
+        this.completeLoading();
       }
     });
   }
@@ -92,7 +149,6 @@ export class RoomTempComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Failed to disable DHT22 sensor:', err);
         this.isDisabling = false;
-        // Navigate home anyway even if disable fails
         this.router.navigate(['/']);
       }
     });
@@ -138,7 +194,7 @@ export class RoomTempComponent implements OnInit, OnDestroy {
 
   get tempPercentage(): number {
     const temp = this.temperature;
-    return Math.max(0, Math.min(100, ((temp - 16) / 14) * 100)); // 16–30°C range
+    return Math.max(0, Math.min(100, ((temp - 16) / 14) * 100));
   }
 
   get humidityPercentage(): number {
@@ -164,5 +220,65 @@ export class RoomTempComponent implements OnInit, OnDestroy {
       case 'Comfortable': return '#f39c12';
       default: return '#e74c3c';
     }
+  }
+
+  get comfortScore(): number {
+    const temp = this.temperature;
+    const hum = this.humidity;
+
+    // Perfect range: 18-26°C and 40-60%
+    if (temp >= 18 && temp <= 26 && hum >= 40 && hum <= 60) {
+      return 95;
+    }
+    // Good range: 16-28°C and 30-70%
+    if (temp >= 16 && temp <= 28 && hum >= 30 && hum <= 70) {
+      return 75;
+    }
+    // Needs adjustment
+    return 45;
+  }
+
+  get airQualityStatus(): string {
+    if (this.comfortScore >= 90) return 'Excellent';
+    if (this.comfortScore >= 70) return 'Good';
+    return 'Fair';
+  }
+
+  get recommendations(): Array<{icon: string, text: string}> {
+    const recs: Array<{icon: string, text: string}> = [];
+    const temp = this.temperature;
+    const hum = this.humidity;
+
+    if (temp < 18) {
+      recs.push({ icon: '🔥', text: 'Increase heating for better comfort' });
+    } else if (temp > 26) {
+      recs.push({ icon: '❄️', text: 'Consider cooling the room' });
+    }
+
+    if (hum < 40) {
+      recs.push({ icon: '💧', text: 'Air is dry, use a humidifier' });
+    } else if (hum > 60) {
+      recs.push({ icon: '🌬️', text: 'High humidity, improve ventilation' });
+    }
+
+    if (recs.length === 0) {
+      recs.push({ icon: '✅', text: 'Environment is optimal!' });
+    }
+
+    return recs;
+  }
+
+  getHumidityColor(): string {
+    const hum = this.humidity;
+    if (hum >= 40 && hum <= 60) return 'linear-gradient(90deg, #2ecc71, #27ae60)';
+    if (hum >= 30 && hum <= 70) return 'linear-gradient(90deg, #f39c12, #e67e22)';
+    return 'linear-gradient(90deg, #e74c3c, #c0392b)';
+  }
+
+  getTempColor(): string {
+    const temp = this.temperature;
+    if (temp >= 18 && temp <= 26) return 'linear-gradient(90deg, #64c8ff, #1e90ff)';
+    if (temp >= 16 && temp <= 28) return 'linear-gradient(90deg, #f39c12, #e67e22)';
+    return 'linear-gradient(90deg, #e74c3c, #c0392b)';
   }
 }

@@ -234,15 +234,89 @@
 
   // Loading & Error States
   .loading-overlay {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 60px 20px;
-    font-size: 20px;
-    opacity: 1;
-    font-weight: 700;
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+    min-height: 400px;
 
-    p {
-      margin: 15px 0;
+    .loading-content {
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+
+      .loading-spinner {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 30px;
+
+        svg {
+          transform: rotate(-90deg);
+          filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.6));
+        }
+
+        .progress-circle {
+          transition: stroke-dashoffset 0.3s ease;
+        }
+
+        .progress-percentage {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 24px;
+          font-weight: 900;
+          color: #64c8ff;
+          text-shadow: 0 0 20px rgba(100, 200, 255, 0.8);
+        }
+      }
+
+      .loading-message {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 20px 0;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        animation: fadeInOut 2s ease-in-out infinite;
+      }
+
+      .loading-bar-container {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 25px;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+
+        .loading-bar {
+          height: 100%;
+          background: linear-gradient(90deg, #64c8ff, #1e90ff, #64c8ff);
+          background-size: 200% 100%;
+          border-radius: 4px;
+          transition: width 0.3s ease;
+          animation: shimmer 2s linear infinite;
+          box-shadow: 0 0 20px rgba(100, 200, 255, 0.6);
+        }
+      }
+    }
+  }
+
+  @keyframes fadeInOut {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
     }
   }
 
@@ -267,12 +341,22 @@
       height: 24px;
     }
 
+    div {
+      flex: 1;
+    }
+
     p {
-      margin: 0;
+      margin: 0 0 8px 0;
       font-size: 1rem;
       line-height: 1.5;
       font-weight: 700;
       text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+
+      &:last-child {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
     }
   }
 
@@ -461,68 +545,251 @@
     }
   }
 
-  // Comfort Section
-  .comfort-section {
-    background: rgba(255, 255, 255, 0.05);
+  // Environmental Analysis Section
+  .analysis-section {
+    background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(10px);
     border-top: 3px solid rgba(100, 200, 255, 0.3);
-    padding: 40px 80px;
+    padding: 50px 80px 60px;
     margin-bottom: 40px;
 
     h2 {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: 900;
-      margin: 0 0 30px 0;
-      opacity: 1;
+      margin: 0 0 40px 0;
       text-align: center;
       text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
       font-family: 'Arial Black', sans-serif;
+      background: linear-gradient(135deg, #64c8ff, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .comfort-meter {
-      text-align: center;
-      margin: 30px 0;
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
 
-      .meter-circle {
-        width: 220px;
-        height: 220px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        margin: 0 auto 20px;
-        border: 5px solid rgba(100, 200, 255, 0.5);
-        box-shadow: 0 0 40px rgba(100, 200, 255, 0.4);
+      .analysis-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 3px solid rgba(100, 200, 255, 0.3);
+        border-radius: 20px;
+        padding: 30px;
+        backdrop-filter: blur(15px);
+        transition: all 0.4s ease;
         position: relative;
         overflow: hidden;
 
         &::before {
           content: '';
           position: absolute;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.3);
-          border-radius: 50%;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(100, 200, 255, 0.1), transparent);
+          transition: left 0.6s ease;
         }
 
-        .meter-value {
-          font-size: 42px;
-          font-weight: 900;
-          color: white;
-          z-index: 1;
+        &:hover {
+          border-color: rgba(100, 200, 255, 0.6);
+          transform: translateY(-5px);
+          box-shadow: 0 10px 40px rgba(100, 200, 255, 0.3);
+
+          &::before {
+            left: 100%;
+          }
+        }
+
+        .card-header {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 25px;
+
+          .icon-wrapper {
+            width: 60px;
+            height: 60px;
+            background: rgba(100, 200, 255, 0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 0 20px rgba(100, 200, 255, 0.3);
+          }
+
+          .header-text {
+            flex: 1;
+
+            h3 {
+              font-size: 20px;
+              font-weight: 900;
+              margin: 0 0 5px 0;
+              text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+            }
+
+            .status-label {
+              font-size: 14px;
+              font-weight: 700;
+              margin: 0;
+              opacity: 0.9;
+              text-shadow: 0 0 10px currentColor;
+            }
+          }
+        }
+      }
+
+      // Comfort Card Specific
+      .comfort-card {
+        &[data-level="Very Comfortable"] {
+          border-color: rgba(46, 204, 113, 0.5);
+
+          &:hover {
+            border-color: rgba(46, 204, 113, 0.8);
+            box-shadow: 0 10px 40px rgba(46, 204, 113, 0.3);
+          }
+
+          .icon-wrapper {
+            background: rgba(46, 204, 113, 0.2);
+          }
+        }
+
+        &[data-level="Comfortable"] {
+          border-color: rgba(243, 156, 18, 0.5);
+
+          &:hover {
+            border-color: rgba(243, 156, 18, 0.8);
+            box-shadow: 0 10px 40px rgba(243, 156, 18, 0.3);
+          }
+
+          .icon-wrapper {
+            background: rgba(243, 156, 18, 0.2);
+          }
+        }
+
+        &[data-level="Needs Adjustment"] {
+          border-color: rgba(231, 76, 60, 0.5);
+
+          &:hover {
+            border-color: rgba(231, 76, 60, 0.8);
+            box-shadow: 0 10px 40px rgba(231, 76, 60, 0.3);
+          }
+
+          .icon-wrapper {
+            background: rgba(231, 76, 60, 0.2);
+          }
+        }
+
+        .score-visual {
           position: relative;
-          text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
-          font-family: 'Arial Black', sans-serif;
+          width: 100px;
+          height: 100px;
+          margin: 20px auto;
+
+          svg {
+            transform: rotate(-90deg);
+            filter: drop-shadow(0 0 15px currentColor);
+          }
+
+          .score-circle {
+            transition: stroke-dashoffset 1s ease;
+          }
+
+          .score-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 32px;
+            font-weight: 900;
+            text-shadow: 0 0 20px currentColor;
+          }
+        }
+      }
+
+      // Air Quality Card
+      .air-quality-card {
+        .quality-bars {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+
+          .quality-item {
+            span {
+              display: block;
+              font-size: 14px;
+              font-weight: 700;
+              margin-bottom: 8px;
+              text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            }
+
+            .bar-container {
+              height: 12px;
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 6px;
+              overflow: hidden;
+              box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+
+              .bar {
+                height: 100%;
+                border-radius: 6px;
+                transition: width 1s ease;
+                box-shadow: 0 0 15px currentColor;
+              }
+            }
+          }
+        }
+      }
+
+      // Recommendations Card
+      .recommendations-card {
+        .recommendations-list {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+
+          .recommendation {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 2px solid rgba(100, 200, 255, 0.2);
+            transition: all 0.3s ease;
+
+            &:hover {
+              background: rgba(100, 200, 255, 0.1);
+              border-color: rgba(100, 200, 255, 0.4);
+              transform: translateX(5px);
+            }
+
+            .rec-icon {
+              font-size: 24px;
+              flex-shrink: 0;
+            }
+
+            .rec-text {
+              font-size: 14px;
+              font-weight: 600;
+              line-height: 1.4;
+              text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+            }
+          }
         }
       }
     }
 
-    .comfort-text {
-      text-align: center;
-      font-size: 24px;
-      font-weight: 900;
-      margin-top: 15px;
-      text-shadow: 0 0 25px rgba(255, 255, 255, 0.8);
+    @media (max-width: 1024px) {
+      .analysis-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      padding: 40px 20px 50px;
     }
   }
 }

@@ -8,16 +8,30 @@ export interface HeartRateReading {
   heartRate: number;
   systolic: number;
   diastolic: number;
+  validBeats?: number;
+  success?: boolean;
+  error?: string | null;
   fingerDetected?: boolean;
   spo2?: number | null;
   timestamp: string;
   deviceId: string;
+  measurementDuration?: number;
+  sessionId?: number;
+}
+
+export interface HeartRateStatus {
+  state: string; // 'idle', 'waiting_finger', 'measuring', 'completed', 'error'
+  fingerDetected: boolean;
+  progress: number;
+  timestamp: string | null;
+  sessionId: number | null;
+  lastReading?: HeartRateReading;
 }
 
 export interface HeartRateApiResponse {
   success: boolean;
   message?: string;
-  data?: HeartRateReading | HeartRateReading[];
+  data?: HeartRateReading | HeartRateReading[] | HeartRateStatus;
   count?: number;
 }
 
@@ -36,17 +50,38 @@ export class HeartRateService {
   constructor(private http: HttpClient) { }
 
   /**
+   * Get current measurement status (real-time)
+   */
+  getStatus(): Observable<HeartRateApiResponse> {
+    return this.http.get<HeartRateApiResponse>(`${API_ENDPOINTS.heartRate.create}/status`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Reset measurement status
+   */
+  resetStatus(): Observable<HeartRateApiResponse> {
+    return this.http.post<HeartRateApiResponse>(`${API_ENDPOINTS.heartRate.create}/reset`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Send new heart rate reading from ESP32 to backend
-   * Required: heartRate, systolic, diastolic
-   * Optional: fingerDetected, spo2, deviceId
    */
   sendReading(data: {
     heartRate: number;
     systolic: number;
     diastolic: number;
+    validBeats?: number;
+    success?: boolean;
+    error?: string;
     fingerDetected?: boolean;
     spo2?: number;
     deviceId?: string;
+    measurementDuration?: number;
+    sessionId?: number;
   }): Observable<HeartRateApiResponse> {
     return this.http.post<HeartRateApiResponse>(API_ENDPOINTS.heartRate.create, data).pipe(
       catchError(this.handleError)
@@ -63,6 +98,15 @@ export class HeartRateService {
   }
 
   /**
+   * Get reading by session ID
+   */
+  getBySessionId(sessionId: number): Observable<HeartRateApiResponse> {
+    return this.http.get<HeartRateApiResponse>(`${API_ENDPOINTS.heartRate.create}/session/${sessionId}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Get recent heart rate readings (with optional limit)
    */
   getAll(limit: number = 50): Observable<HeartRateApiResponse> {
@@ -74,7 +118,6 @@ export class HeartRateService {
 
   /**
    * Disable the MAX30105 heart rate sensor
-   * Sends POST request to /api/control/sensor/max30105 with {enabled: false}
    */
   disableSensor(): Observable<SensorControlResponse> {
     return this.http.post<SensorControlResponse>(
@@ -87,7 +130,6 @@ export class HeartRateService {
 
   /**
    * Enable the MAX30105 heart rate sensor
-   * Sends POST request to /api/control/sensor/max30105 with {enabled: true}
    */
   enableSensor(): Observable<SensorControlResponse> {
     return this.http.post<SensorControlResponse>(

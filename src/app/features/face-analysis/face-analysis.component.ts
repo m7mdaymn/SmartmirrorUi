@@ -1,9 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { SkincareService } from '../../core/services/skincare.service';
 
-// Updated interface to match backend response
 interface SkincareAnalysisResponse {
   success: boolean;
   message?: string;
@@ -21,6 +20,7 @@ interface SkincareAnalysisResponse {
     detected: boolean;
     confidence: number;
     regions_analyzed: number;
+    capturedImage?: string;
     skin_type_distribution?: any;
     condition_distribution?: any;
     message: string;
@@ -35,14 +35,21 @@ interface SkincareAnalysisResponse {
   templateUrl: './face-analysis.component.html',
   styleUrls: ['./face-analysis.component.scss']
 })
-export class FaceAnalysisComponent implements OnInit {
+export class FaceAnalysisComponent implements OnInit, OnDestroy {
+  @ViewChild('videoElement', { static: false }) videoElement!: ElementRef<HTMLVideoElement>;
+
   isScanning: boolean = false;
   faceDetected: boolean = false;
   capturedImage: string | null = null;
-  analysisStatus: string = 'idle'; // 'idle' | 'scanning' | 'complete' | 'error'
+  analysisStatus: string = 'idle'; // 'idle' | 'preparing' | 'scanning' | 'complete' | 'error'
   errorMessage: string = '';
+  analysisProgress: number = 0;
 
-  // Real data from backend - ALL EMPTY BY DEFAULT
+  // Video stream
+  videoStream: MediaStream | null = null;
+  showLiveVideo: boolean = false;
+
+  // Real data from backend
   skinType: string = '';
   condition: string = '';
   morningRoutine: string[] = [];
@@ -51,21 +58,27 @@ export class FaceAnalysisComponent implements OnInit {
   avoidIngredients: string[] = [];
   lifestyleTips: string[] = [];
 
-  // AI confidence (only set after successful analysis)
+  // AI confidence
   confidence: number = 0;
   regionsAnalyzed: number = 0;
 
-  // Recommendations (will be populated from backend only)
+  // Recommendations
   recommendations: any[] = [];
-
-  // Daily Routine (will be populated from backend only)
   dailyRoutine: any[] = [];
+
+  private progressInterval: any;
 
   constructor(private skincareService: SkincareService) {}
 
   ngOnInit() {
-    // Check if services are running
     this.checkServiceStatus();
+  }
+
+  ngOnDestroy() {
+    this.stopVideoStream();
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
   }
 
   checkServiceStatus() {
@@ -80,41 +93,99 @@ export class FaceAnalysisComponent implements OnInit {
     });
   }
 
+  async startVideoStream() {
+    try {
+      this.showLiveVideo = true;
+      this.analysisStatus = 'preparing';
+
+      // Request camera access
+      this.videoStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user'
+        }
+      });
+
+      // Wait for video element to be available
+      setTimeout(() => {
+        if (this.videoElement && this.videoElement.nativeElement) {
+          this.videoElement.nativeElement.srcObject = this.videoStream;
+          this.videoElement.nativeElement.play();
+          console.log('📹 Live video stream started');
+        }
+      }, 100);
+
+    } catch (error) {
+      console.error('❌ Camera access error:', error);
+      this.errorMessage = 'Cannot access camera. Please allow camera permissions.';
+      this.analysisStatus = 'error';
+      this.showLiveVideo = false;
+    }
+  }
+
+  stopVideoStream() {
+    if (this.videoStream) {
+      this.videoStream.getTracks().forEach(track => track.stop());
+      this.videoStream = null;
+    }
+    this.showLiveVideo = false;
+  }
+
   startScan() {
     if (this.isScanning) return;
 
-    // Reset everything before new scan
     this.resetData();
-
     this.isScanning = true;
     this.analysisStatus = 'scanning';
     this.errorMessage = '';
     this.faceDetected = true;
+    this.analysisProgress = 0;
 
     console.log('📸 Starting AI skin analysis...');
-    console.log('🔗 Calling: POST http://localhost:5000/api/skincare/analyze');
 
-    // Call the real backend API
-    this.skincareService.analyzeSkin().subscribe({
-      next: (response: any) => {
-        console.log('✅ Analysis Complete:', response);
+    // Start live video preview
+    this.startVideoStream();
 
-        if (response.success) {
-          this.processAnalysisResults(response);
-        } else {
-          this.handleAnalysisError(response.message || 'Analysis failed');
-        }
-      },
-      error: (error) => {
-        console.error('❌ Analysis Error:', error);
-        this.handleAnalysisError(error.message || 'Analysis failed');
+    // Simulate progress animation
+    this.progressInterval = setInterval(() => {
+      if (this.analysisProgress < 90) {
+        this.analysisProgress += Math.random() * 15;
       }
-    });
+    }, 300);
+
+    // Call backend API after camera is ready
+    setTimeout(() => {
+      this.skincareService.analyzeSkin().subscribe({
+        next: (response: any) => {
+          this.analysisProgress = 100;
+          console.log('✅ Analysis Complete:', response);
+
+          if (response.success) {
+            this.processAnalysisResults(response);
+          } else {
+            this.handleAnalysisError(response.message || 'Analysis failed');
+          }
+
+          // Stop video after capture
+          setTimeout(() => this.stopVideoStream(), 500);
+        },
+        error: (error) => {
+          console.error('❌ Analysis Error:', error);
+          this.handleAnalysisError(error.message || 'Analysis failed');
+          this.stopVideoStream();
+        }
+      });
+    }, 1500); // Give time for video to load
   }
 
   processAnalysisResults(response: SkincareAnalysisResponse) {
     const data = response.data;
     const aiAnalysis = response.aiAnalysis;
+
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
 
     console.log('📊 Processing backend data:', {
       skinType: data?.skinType,
@@ -126,7 +197,7 @@ export class FaceAnalysisComponent implements OnInit {
       ingredients: data?.recommendedIngredients?.length || 0
     });
 
-    // Store ONLY real data from backend
+    // Store real data from backend
     this.skinType = data?.skinType || '';
     this.condition = data?.condition || '';
     this.morningRoutine = data?.morningRoutine || [];
@@ -135,22 +206,22 @@ export class FaceAnalysisComponent implements OnInit {
     this.avoidIngredients = data?.avoidIngredients || [];
     this.lifestyleTips = data?.lifestyleTips || [];
 
-    // Get REAL confidence from AI
+    // Get AI confidence
     this.confidence = aiAnalysis?.confidence || 0;
     this.regionsAnalyzed = aiAnalysis?.regions_analyzed || 0;
 
-    // Build recommendations from backend data
-    this.buildRecommendations();
+    // Use captured image from AI if available
+    if (aiAnalysis?.capturedImage) {
+      this.capturedImage = aiAnalysis.capturedImage;
+    }
 
-    // Build daily routine from backend data
+    // Build recommendations and routine
+    this.buildRecommendations();
     this.buildDailyRoutine();
 
     // Update UI state
     this.isScanning = false;
     this.analysisStatus = 'complete';
-
-    // Generate a simple representation image
-    this.capturedImage = this.generateResultImage();
 
     console.log('✨ Analysis processed successfully');
     console.log('📋 Final data:', {
@@ -180,7 +251,6 @@ export class FaceAnalysisComponent implements OnInit {
   buildRecommendations() {
     this.recommendations = [];
 
-    // Build from morning routine
     if (this.morningRoutine.length > 0) {
       this.recommendations.push({
         icon: '🌅',
@@ -190,7 +260,6 @@ export class FaceAnalysisComponent implements OnInit {
       });
     }
 
-    // Build from recommended ingredients
     if (this.recommendedIngredients.length > 0) {
       this.recommendations.push({
         icon: '🧪',
@@ -200,7 +269,6 @@ export class FaceAnalysisComponent implements OnInit {
       });
     }
 
-    // Build from night routine
     if (this.nightRoutine.length > 0) {
       this.recommendations.push({
         icon: '🌙',
@@ -210,7 +278,6 @@ export class FaceAnalysisComponent implements OnInit {
       });
     }
 
-    // Build from lifestyle tips
     if (this.lifestyleTips.length > 0) {
       this.recommendations.push({
         icon: '💪',
@@ -224,7 +291,6 @@ export class FaceAnalysisComponent implements OnInit {
   buildDailyRoutine() {
     this.dailyRoutine = [];
 
-    // Morning routine - start at 7:00 AM
     this.morningRoutine.forEach((step, i) => {
       const hour = 7 + Math.floor(i / 4);
       const minute = (i % 4) * 15;
@@ -236,7 +302,6 @@ export class FaceAnalysisComponent implements OnInit {
       });
     });
 
-    // Night routine - start at 8:00 PM (20:00)
     this.nightRoutine.forEach((step, i) => {
       const hour = 20 + Math.floor(i / 4);
       const minute = (i % 4) * 15;
@@ -264,24 +329,33 @@ export class FaceAnalysisComponent implements OnInit {
     this.analysisStatus = 'error';
     this.errorMessage = message;
     this.faceDetected = false;
+    this.analysisProgress = 0;
+
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
 
     console.error('❌ Analysis failed:', message);
   }
 
   resetScan() {
+    this.stopVideoStream();
     this.isScanning = false;
     this.faceDetected = false;
     this.capturedImage = null;
     this.analysisStatus = 'idle';
     this.errorMessage = '';
+    this.analysisProgress = 0;
+
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
 
     this.resetData();
-
     console.log('🔄 Scan reset - ready for new analysis');
   }
 
   resetData() {
-    // Clear ALL data
     this.skinType = '';
     this.condition = '';
     this.morningRoutine = [];
@@ -298,48 +372,11 @@ export class FaceAnalysisComponent implements OnInit {
   getStatusText(): string {
     switch(this.analysisStatus) {
       case 'idle': return 'Ready';
-      case 'scanning': return 'Analyzing with AI...';
+      case 'preparing': return 'Preparing Camera...';
+      case 'scanning': return 'AI Analyzing...';
       case 'complete': return 'Analysis Complete ✓';
       case 'error': return 'Error';
       default: return 'Ready';
     }
-  }
-
-  private generateResultImage(): string {
-    return 'data:image/svg+xml;base64,' + btoa(`
-      <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#4a5568;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#2d3748;stop-opacity:1" />
-          </linearGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#bgGrad)"/>
-
-        <!-- Face -->
-        <circle cx="200" cy="150" r="80" fill="#e2e8f0" opacity="0.9"/>
-
-        <!-- Eyes -->
-        <circle cx="170" cy="135" r="12" fill="#2d3748"/>
-        <circle cx="230" cy="135" r="12" fill="#2d3748"/>
-
-        <!-- Nose -->
-        <ellipse cx="200" cy="165" rx="8" ry="14" fill="#cbd5e0"/>
-
-        <!-- Smile -->
-        <path d="M 170 195 Q 200 210 230 195" stroke="#2d3748" stroke-width="5" fill="none" stroke-linecap="round"/>
-
-        <!-- Result Text -->
-        <text x="200" y="280" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#fff" text-anchor="middle">
-          ${this.skinType}
-        </text>
-        <text x="200" y="310" font-family="Arial, sans-serif" font-size="18" fill="#cbd5e0" text-anchor="middle">
-          ${this.condition}
-        </text>
-        <text x="200" y="340" font-family="Arial, sans-serif" font-size="16" fill="#48bb78" text-anchor="middle">
-          ✓ AI: ${this.confidence}% (${this.regionsAnalyzed} regions)
-        </text>
-      </svg>
-    `);
   }
 }
