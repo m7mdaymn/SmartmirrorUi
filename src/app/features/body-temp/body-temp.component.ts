@@ -1,9 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { interval, Subscription } from 'rxjs';
 
-// Static mock data interface
 interface HumanTempReading {
   objectTemp: number;
   ambientTemp: number;
@@ -20,75 +18,128 @@ interface HumanTempReading {
 })
 export class BodyTempComponent implements OnInit, OnDestroy {
   latestReading: HumanTempReading | null = null;
-  loading = true;
+  loading = false;
+  measuring = false;
   error: string | null = null;
   lastUpdated: string = '';
   isDisabling = false;
 
-  private pollSubscription!: Subscription;
-
-  // Array of temperature values to cycle through
-  private temperatureValues = [37.1, 37.3, 37.0];
-  private currentTempIndex = 0;
-
-  // Static mock data - you can modify these values
-  private staticData: HumanTempReading = {
-    objectTemp: 37.1,      // Body temperature in Celsius
-    ambientTemp: 24.5,     // Ambient temperature in Celsius
-    unit: 'C',             // Temperature unit
-    timestamp: new Date().toISOString()
-  };
+  // Loading progress properties
+  loadingProgress = 0;
+  loadingMessage = 'Put your finger for 7 seconds...';
+  
+  private progressInterval?: any;
 
   constructor(private router: Router) {}
 
   ngOnInit(): void {
-    // Simulate initial loading
-    setTimeout(() => {
-      this.loadStaticData();
-      this.loading = false;
-    }, 1000);
-
-    // Simulate periodic updates (optional - simulates small temperature fluctuations)
-    this.pollSubscription = interval(8000).subscribe(() => {
-      this.simulateTemperatureUpdate();
-    });
+    // Start measurement automatically when page opens
+    this.startMeasurement();
   }
 
   ngOnDestroy(): void {
-    this.pollSubscription?.unsubscribe();
-  }
-
-  /**
-   * Load static data
-   */
-  loadStaticData(): void {
-    this.latestReading = { ...this.staticData };
-    this.updateLastUpdated();
-    this.error = null;
-  }
-
-  /**
-   * Cycle through the temperature values
-   */
-  simulateTemperatureUpdate(): void {
-    if (this.latestReading) {
-      // Move to next temperature in the cycle
-      this.currentTempIndex = (this.currentTempIndex + 1) % this.temperatureValues.length;
-
-      // Update to the next temperature value
-      this.latestReading.objectTemp = this.temperatureValues[this.currentTempIndex];
-      this.latestReading.timestamp = new Date().toISOString();
-      this.updateLastUpdated();
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
     }
   }
 
+  // Show instruction text before progress
+  showInstructionText = false;
+
   /**
-   * Handle back button click - navigate home
+   * Start temperature measurement
+   */
+  startMeasurement(): void {
+    if (this.measuring) return;
+
+    this.measuring = true;
+    this.loading = true;
+    this.error = null;
+    this.latestReading = null;
+    
+    // First: Show instruction text for 3 seconds
+    this.showInstructionText = true;
+    this.loadingMessage = 'Place your finger on the sensor...';
+    
+    setTimeout(() => {
+      // After 3 seconds: Hide text and start progress
+      this.showInstructionText = false;
+      this.startLoadingProgress();
+    }, 3000);
+  }
+
+  /**
+   * Start the 7-second loading progress animation
+   */
+  startLoadingProgress(): void {
+    this.loadingProgress = 0;
+    const duration = 7000; // 7 seconds
+    const updateInterval = 50; // Update every 50ms
+    const totalSteps = duration / updateInterval;
+    let currentStep = 0;
+
+    this.progressInterval = setInterval(() => {
+      currentStep++;
+      this.loadingProgress = Math.min((currentStep / totalSteps) * 100, 100);
+
+      // Update loading message based on progress
+      if (this.loadingProgress < 20) {
+        this.loadingMessage = 'Detecting temperature...';
+      } else if (this.loadingProgress < 40) {
+        this.loadingMessage = 'Reading sensor data...';
+      } else if (this.loadingProgress < 60) {
+        this.loadingMessage = 'Calibrating reading...';
+      } else if (this.loadingProgress < 80) {
+        this.loadingMessage = 'Analyzing data...';
+      } else if (this.loadingProgress < 95) {
+        this.loadingMessage = 'Finalizing measurement...';
+      } else {
+        this.loadingMessage = 'Almost done...';
+      }
+
+      // Complete at 100%
+      if (this.loadingProgress >= 100) {
+        clearInterval(this.progressInterval);
+        this.completeMeasurement();
+      }
+    }, updateInterval);
+  }
+
+  /**
+   * Complete measurement and generate random temperature between 37.1 and 37.9
+   */
+  completeMeasurement(): void {
+    // Generate random temperature between 37.1 and 37.9 with one decimal
+    const minTemp = 37.1;
+    const maxTemp = 37.9;
+    const randomTemp = Math.random() * (maxTemp - minTemp) + minTemp;
+    const bodyTemperature = Math.round(randomTemp * 10) / 10; // Round to 1 decimal
+
+    // Generate ambient temperature (typically cooler)
+    const ambientTemp = Math.round((22 + Math.random() * 4) * 10) / 10; // 22-26°C
+
+    this.latestReading = {
+      objectTemp: bodyTemperature,
+      ambientTemp: ambientTemp,
+      unit: 'C',
+      timestamp: new Date().toISOString()
+    };
+
+    this.updateLastUpdated();
+
+    // Small delay to show 100% before hiding loading
+    setTimeout(() => {
+      this.loading = false;
+      this.measuring = false;
+    }, 300);
+  }
+
+  /**
+   * Handle back button click
    */
   onBackClick(): void {
     this.isDisabling = true;
 
-    // Simulate disable delay
     setTimeout(() => {
       console.log('Navigating back to home');
       this.isDisabling = false;
@@ -107,7 +158,7 @@ export class BodyTempComponent implements OnInit, OnDestroy {
     }
   }
 
-  // === Real Data Getters ===
+  // === Data Getters ===
   get bodyTemp(): number {
     return this.latestReading?.objectTemp ?? 0;
   }
@@ -122,6 +173,7 @@ export class BodyTempComponent implements OnInit, OnDestroy {
 
   // === Status & Classes ===
   get tempStatus(): string {
+    if (!this.latestReading) return 'READY';
     if (this.bodyTemp >= 38.0) return 'FEVER';
     if (this.bodyTemp >= 37.3) return 'ELEVATED';
     if (this.bodyTemp >= 36.0) return 'NORMAL';
@@ -133,7 +185,8 @@ export class BodyTempComponent implements OnInit, OnDestroy {
       case 'FEVER': return 'status-fever';
       case 'ELEVATED': return 'status-elevated';
       case 'NORMAL': return 'status-normal';
-      default: return 'status-low';
+      case 'LOW': return 'status-low';
+      default: return 'status-ready';
     }
   }
 
@@ -142,20 +195,23 @@ export class BodyTempComponent implements OnInit, OnDestroy {
       case 'FEVER': return '🤒';
       case 'ELEVATED': return '😓';
       case 'NORMAL': return '😊';
-      default: return '🥶';
+      case 'LOW': return '🥶';
+      default: return '🌡️';
     }
   }
 
   get connectionStatus(): string {
-    if (this.loading) return 'connecting';
+    if (this.measuring) return 'measuring';
     if (this.error) return 'offline';
-    return 'online';
+    if (this.latestReading) return 'online';
+    return 'ready';
   }
 
   get connectionStatusText(): string {
-    if (this.loading) return 'Connecting...';
+    if (this.measuring) return 'Measuring...';
     if (this.error) return 'Sensor Off';
-    return 'Live Reading';
+    if (this.latestReading) return 'Measurement Complete';
+    return 'Ready';
   }
 
   // === Thermometer Visualization ===

@@ -208,10 +208,15 @@
         display: inline-block;
         margin-right: 8px;
 
-        .connecting & {
-          background: #f39c12;
+        .ready & {
+          background: #95a5a6;
+          box-shadow: 0 0 15px #95a5a6;
+        }
+
+        .measuring & {
+          background: #ffa500;
           animation: pulse 1.5s infinite;
-          box-shadow: 0 0 15px #f39c12;
+          box-shadow: 0 0 15px #ffa500;
         }
 
         .online & {
@@ -222,12 +227,6 @@
         .offline & {
           background: #e74c3c;
           box-shadow: 0 0 15px #e74c3c;
-        }
-
-        .measuring & {
-          background: #ffa500;
-          animation: pulse 1.5s infinite;
-          box-shadow: 0 0 15px #ffa500;
         }
       }
 
@@ -240,8 +239,329 @@
     }
   }
 
-  /* Loading & Error States */
-  .loading-overlay,
+  /* Instruction Overlay (First 3 seconds) */
+  .instruction-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    min-height: 400px;
+    animation: fadeIn 0.5s ease-out;
+
+    .instruction-content {
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+      position: relative;
+
+      .instruction-icon {
+        font-size: 120px;
+        margin-bottom: 30px;
+        animation: bounce 2s ease-in-out infinite;
+        filter: drop-shadow(0 0 30px rgba(255, 165, 0, 0.8));
+      }
+
+      .instruction-title {
+        font-size: 42px;
+        font-weight: 900;
+        margin: 0 0 20px 0;
+        text-shadow: 0 0 40px rgba(255, 255, 255, 0.9);
+        color: #ffa500;
+        font-family: 'Arial Black', sans-serif;
+      }
+
+      .instruction-text {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 15px 0;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+      }
+
+      .instruction-subtext {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 10px 0 30px 0;
+        opacity: 0.9;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+      }
+
+      .pulse-animation {
+        width: 80px;
+        height: 80px;
+        margin: 30px auto 0;
+        border: 4px solid rgba(255, 165, 0, 0.3);
+        border-radius: 50%;
+        animation: pulse-ring 2s ease-out infinite;
+        position: relative;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 40px;
+          height: 40px;
+          background: rgba(255, 165, 0, 0.6);
+          border-radius: 50%;
+          animation: pulse-dot 2s ease-out infinite;
+          box-shadow: 0 0 20px rgba(255, 165, 0, 0.8);
+        }
+      }
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+  }
+
+  /* Instruction Overlay (First 3 seconds) */
+  .instruction-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    min-height: 400px;
+    animation: fadeIn 0.5s ease-out;
+
+    .instruction-content {
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+      position: relative;
+
+      .instruction-icon {
+        font-size: 120px;
+        margin-bottom: 30px;
+        animation: bounce 2s ease-in-out infinite;
+        filter: drop-shadow(0 0 30px rgba(255, 165, 0, 0.8));
+      }
+
+      .instruction-title {
+        font-size: 42px;
+        font-weight: 900;
+        margin: 0 0 20px 0;
+        text-shadow: 0 0 40px rgba(255, 255, 255, 0.9);
+        color: #ffa500;
+        font-family: 'Arial Black', sans-serif;
+      }
+
+      .instruction-text {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 15px 0;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+      }
+
+      .instruction-subtext {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 10px 0 30px 0;
+        opacity: 0.9;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+      }
+
+      .pulse-animation {
+        width: 80px;
+        height: 80px;
+        margin: 30px auto 0;
+        border: 4px solid rgba(255, 165, 0, 0.3);
+        border-radius: 50%;
+        animation: pulse-ring 2s ease-out infinite;
+        position: relative;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 40px;
+          height: 40px;
+          background: rgba(255, 165, 0, 0.6);
+          border-radius: 50%;
+          animation: pulse-dot 2s ease-out infinite;
+          box-shadow: 0 0 20px rgba(255, 165, 0, 0.8);
+        }
+      }
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+  }
+
+  /* Loading State with Progress */
+  .loading-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    min-height: 400px;
+    animation: fadeIn 0.5s ease-out;
+    animation: fadeIn 0.5s ease-out;
+
+    .loading-content {
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+
+      .loading-spinner {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 30px;
+
+        svg {
+          transform: rotate(-90deg);
+          filter: drop-shadow(0 0 20px rgba(255, 165, 0, 0.6));
+        }
+
+        .progress-circle {
+          transition: stroke-dashoffset 0.3s ease;
+        }
+
+        .progress-percentage {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 24px;
+          font-weight: 900;
+          color: #ffa500;
+          text-shadow: 0 0 20px rgba(255, 165, 0, 0.8);
+        }
+      }
+
+      .loading-message {
+        font-size: 20px;
+        font-weight: 700;
+        margin: 20px 0;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        animation: fadeInOut 2s ease-in-out infinite;
+      }
+
+      .loading-bar-container {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 25px;
+        box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+
+        .loading-bar {
+          height: 100%;
+          background: linear-gradient(90deg, #ffa500, #ff8c00, #ffa500);
+          background-size: 200% 100%;
+          border-radius: 4px;
+          transition: width 0.3s ease;
+          animation: shimmer 2s linear infinite;
+          box-shadow: 0 0 20px rgba(255, 165, 0, 0.6);
+        }
+      }
+
+      .loading-instruction {
+        margin-top: 20px;
+        font-size: 16px;
+        opacity: 0.8;
+        font-weight: 700;
+        color: #ffa500;
+      }
+    }
+  }
+
+  @keyframes fadeInOut {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Error Message */
   .error-message {
     text-align: center;
     padding: 60px 20px;
@@ -249,15 +569,11 @@
     opacity: 1;
     font-weight: 700;
     text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+    color: #ff6b6b;
 
     p {
       margin: 15px 0;
     }
-  }
-
-  .error-message {
-    color: #ff6b6b;
-    text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
   }
 
   /* Main Temperature Display */
@@ -342,43 +658,6 @@
             }
           }
         }
-
-        .measuring-text {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          text-align: center;
-          color: white;
-          font-size: 16px;
-          z-index: 10;
-          width: 200px;
-
-          p {
-            margin: 15px 0 8px;
-            font-weight: 900;
-            font-size: 18px;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-          }
-
-          small {
-            opacity: 1;
-            font-size: 14px;
-            font-weight: 700;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
-          }
-        }
-
-        .pulse-loader {
-          width: 60px;
-          height: 60px;
-          border: 6px solid rgba(255, 255, 255, 0.3);
-          border-top: 6px solid #ffa500;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 20px;
-          box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
-        }
       }
 
       .current-temp {
@@ -437,14 +716,38 @@
             box-shadow: 0 0 30px rgba(255, 71, 87, 0.5);
           }
         }
+      }
 
-        .measuring-hint {
-          font-size: 22px;
-          opacity: 1;
-          margin-top: 15px;
-          color: #ffa500;
-          font-weight: 700;
-          text-shadow: 0 0 20px rgba(255, 165, 0, 0.8);
+      .measure-again-btn {
+        margin-top: 30px;
+        padding: 15px 30px;
+        background: rgba(255, 165, 0, 0.2);
+        border: 3px solid rgba(255, 165, 0, 0.5);
+        border-radius: 30px;
+        color: #ffa500;
+        font-weight: 900;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-shadow: 0 0 15px rgba(255, 165, 0, 0.8);
+
+        svg {
+          filter: drop-shadow(0 0 10px rgba(255, 165, 0, 0.6));
+        }
+
+        &:hover {
+          background: rgba(255, 165, 0, 0.3);
+          border-color: rgba(255, 165, 0, 0.8);
+          box-shadow: 0 0 30px rgba(255, 165, 0, 0.5);
+          transform: translateY(-2px);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
         }
       }
     }

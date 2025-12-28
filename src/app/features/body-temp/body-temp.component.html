@@ -41,12 +41,45 @@
     </div>
   </div>
 
-  <!-- Loading / Error -->
-  <div class="loading-overlay" *ngIf="loading">
-    <p>Aiming sensor at forehead...</p>
-    <p>Hold 3-5 cm away for accurate reading</p>
+  <!-- Loading State - Instruction Text (First 3 seconds) -->
+  <div class="instruction-overlay" *ngIf="loading && showInstructionText">
+    <div class="instruction-content">
+      <div class="instruction-icon">👆</div>
+      <h2 class="instruction-title">Place Your Finger</h2>
+      <p class="instruction-text">Hold your finger on the sensor</p>
+      <p class="instruction-subtext">Keep it still for accurate reading</p>
+      <div class="pulse-animation"></div>
+    </div>
   </div>
 
+  <!-- Loading State - Progress (After 3 seconds) -->
+  <div class="loading-overlay" *ngIf="loading && !showInstructionText">
+    <div class="loading-content">
+      <div class="loading-spinner">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="35" fill="none" stroke="rgba(255, 165, 0, 0.2)" stroke-width="6"/>
+          <circle
+            cx="40"
+            cy="40"
+            r="35"
+            fill="none"
+            stroke="#ffa500"
+            stroke-width="6"
+            stroke-dasharray="220"
+            [attr.stroke-dashoffset]="220 - (220 * loadingProgress / 100)"
+            class="progress-circle"/>
+        </svg>
+        <div class="progress-percentage">{{ loadingProgress | number:'1.0-0' }}%</div>
+      </div>
+      <p class="loading-message">{{ loadingMessage }}</p>
+      <div class="loading-bar-container">
+        <div class="loading-bar" [style.width.%]="loadingProgress"></div>
+      </div>
+      <p class="loading-instruction">Keep your finger still...</p>
+    </div>
+  </div>
+
+  <!-- Error Message -->
   <div class="error-message" *ngIf="error">
     <p>⚠️ {{ error }}</p>
     <p>Tap "Body Temp" on home screen to enable MLX90614 sensor.</p>
@@ -77,6 +110,14 @@
           {{ tempIcon }} {{ tempStatus }}
         </div>
       </div>
+
+      <!-- Measure Again Button -->
+      <button class="measure-again-btn" (click)="startMeasurement()" [disabled]="measuring">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+        </svg>
+        Measure Again
+      </button>
     </div>
 
     <!-- Info Panel -->
